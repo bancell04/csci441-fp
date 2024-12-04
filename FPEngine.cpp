@@ -651,7 +651,9 @@ void FPEngine::_updateScene()
 
     // move cart forward
     if (_keys[GLFW_KEY_W] || _keys[GLFW_KEY_UP]) {
-
+        if (cameraIndex == 1) {
+            cameras[cameraIndex]->moveForward(0.5f);
+        }
     }
 
     _pMapCam->recomputeOrientation();
@@ -659,7 +661,9 @@ void FPEngine::_updateScene()
 
     // move cart backward
     if (_keys[GLFW_KEY_S] || _keys[GLFW_KEY_DOWN]) {
-
+        if (cameraIndex == 1) {
+            cameras[cameraIndex]->moveBackward(0.5f);
+        }
     }
 }
 
