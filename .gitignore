@@ -1,0 +1,12 @@
+.DS_STORE
+*.exe
+mp
+*.cmake
+CMakeCache.txt
+CMakeLists.txt
+CMakeFiles
+Makefile
+.ninja*
+build.ninja
+Testing
+.idea*
