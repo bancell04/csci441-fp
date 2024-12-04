@@ -391,68 +391,6 @@ void FPEngine::_generateEnvironment()
     const GLfloat TOP_END_POINT = GRID_LENGTH / 2.0f + 5.0f;
     //******************************************************************
 
-    srand(12456); // seed our RNG
-
-    // psych! everything's on a grid.
-    bool drawTree = false;
-    for (int i = LEFT_END_POINT; i < RIGHT_END_POINT; i += GRID_SPACING_WIDTH)
-    {
-        for (int j = BOTTOM_END_POINT; j < TOP_END_POINT; j += GRID_SPACING_LENGTH)
-        {
-            // don't just draw a   ANYWHERE.
-            if (i % 2 && j % 2 && getRand() < 0.4f)
-            {
-                // translate to spot
-                glm::mat4 transToSpotMtx = glm::translate(glm::mat4(1.0), glm::vec3(i, 0.0f, j));
-
-                // compute random height
-                GLdouble height = powf(getRand(), 2.5) * 10 + 1;
-                // scale to building size
-                glm::mat4 scaleToHeightMtx = glm::scale(glm::mat4(1.0), glm::vec3(1, height, 1));
-
-                // translate up to grid
-                glm::mat4 transToHeight = glm::translate(glm::mat4(1.0), glm::vec3(0, height / 2.0f, 0));
-
-                // compute full model matrix
-                //glm::mat4 treeModelMatrix = transToHeight * scaleToHeightMtx* transToSpotMtx;
-                glm::mat4 modelMatrix;
-
-                if (drawTree)
-                {
-                    glm::mat4 scaleTree = glm::scale(glm::mat4(1.0), glm::vec3(0.2f, 1.5, 0.2f));
-                    modelMatrix = transToSpotMtx * scaleTree;
-                }
-                else
-                {
-                    modelMatrix = transToHeight * scaleToHeightMtx * transToSpotMtx;
-                }
-
-                // compute random color
-                glm::vec3 color(getRand(), getRand(), getRand());
-                glm::vec3 greenColor(0.1, 1.0, 0.1);
-                glm::vec3 brownColor(0.7, 0.9, 0.1);
-                // store building properties
-
-
-                BuildingData currentBuilding;
-                if (drawTree == false)
-                {
-                    currentBuilding = {modelMatrix, color};
-                    drawTree = true;
-                }
-                else
-                {
-                    currentBuilding = {modelMatrix, greenColor};
-                    // _buildings.emplace_back( currentBuilding );
-                    // currentBuilding = {modelMatrix, brownColor};
-                    drawTree = false;
-                }
-
-
-                _buildings.emplace_back(currentBuilding);
-            }
-        }
-    }
 }
 
 void FPEngine::mSetupScene()
