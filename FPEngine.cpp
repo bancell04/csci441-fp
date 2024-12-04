@@ -1,4 +1,4 @@
-#include "MPEngine.h"
+#include "FPEngine.h"
 
 #include <CSCI441/objects.hpp>
 
@@ -26,10 +26,10 @@ GLfloat getRand()
 //
 // Public Interface
 
-MPEngine::MPEngine()
+FPEngine::FPEngine()
     : CSCI441::OpenGLEngine(4, 1,
                             640, 480,
-                            "MP - 7 Flags")
+                            "FP - 8 Flags")
 {
     for (auto& _key : _keys) _key = GL_FALSE;
 
@@ -37,12 +37,12 @@ MPEngine::MPEngine()
     _leftMouseButtonState = GLFW_RELEASE;
 }
 
-MPEngine::~MPEngine()
+FPEngine::~FPEngine()
 {
     delete _pArcballCam;
 }
 
-void MPEngine::handleKeyEvent(GLint key, GLint action)
+void FPEngine::handleKeyEvent(GLint key, GLint action)
 {
     if (key != GLFW_KEY_UNKNOWN)
         if (key == GLFW_KEY_COMMA || key == GLFW_KEY_PERIOD || key == GLFW_KEY_SPACE || key == GLFW_KEY_F)
@@ -69,7 +69,7 @@ void MPEngine::handleKeyEvent(GLint key, GLint action)
     }
 }
 
-void MPEngine::handleMouseButtonEvent(GLint button, GLint action)
+void FPEngine::handleMouseButtonEvent(GLint button, GLint action)
 {
     // if the event is for the left mouse button
     if (button == GLFW_MOUSE_BUTTON_LEFT)
@@ -79,7 +79,7 @@ void MPEngine::handleMouseButtonEvent(GLint button, GLint action)
     }
 }
 
-void MPEngine::handleCursorPositionEvent(glm::vec2 currMousePosition)
+void FPEngine::handleCursorPositionEvent(glm::vec2 currMousePosition)
 {
     // if mouse hasn't moved in the window, prevent camera from flipping out
     if (_mousePosition.x == MOUSE_UNINITIALIZED)
@@ -134,7 +134,7 @@ void MPEngine::handleCursorPositionEvent(glm::vec2 currMousePosition)
 //
 // Engine Setup
 
-void MPEngine::mSetupGLFW()
+void FPEngine::mSetupGLFW()
 {
     CSCI441::OpenGLEngine::mSetupGLFW();
 
@@ -144,7 +144,7 @@ void MPEngine::mSetupGLFW()
     glfwSetCursorPosCallback(mpWindow, a3_engine_cursor_callback);
 }
 
-void MPEngine::mSetupOpenGL()
+void FPEngine::mSetupOpenGL()
 {
     glEnable(GL_DEPTH_TEST); // enable depth testing
     glDepthFunc(GL_LESS); // use less than depth test
@@ -155,7 +155,7 @@ void MPEngine::mSetupOpenGL()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // clear the frame buffer to black
 }
 
-void MPEngine::mSetupShaders()
+void FPEngine::mSetupShaders()
 {
     _textureShaderProgram = new CSCI441::ShaderProgram("shaders/mp.v.glsl", "shaders/mp.f.glsl");
     // query uniform locations
@@ -209,28 +209,13 @@ void MPEngine::mSetupShaders()
                                          _textureShaderAttributeLocations.texCoord);
 }
 
-void MPEngine::mSetupBuffers()
+void FPEngine::mSetupBuffers()
 {
-    _sirByzler = new SirByzler(_textureShaderProgram->getShaderProgramHandle(),
-                               _textureShaderUniformLocations.mvpMatrix,
-                               _textureShaderUniformLocations.normalMatrix,
-                               _textureShaderUniformLocations.materialColor);
-
-    _ploopy = new Ploopy(_textureShaderProgram->getShaderProgramHandle(),
-                         _textureShaderUniformLocations.mvpMatrix,
-                         _textureShaderUniformLocations.normalMatrix,
-                         _textureShaderUniformLocations.materialColor);
-
-    _marcel = new Marcel(_textureShaderProgram->getShaderProgramHandle(),
-                         _textureShaderUniformLocations.mvpMatrix,
-                         _textureShaderUniformLocations.normalMatrix,
-                         _textureShaderUniformLocations.materialColor);
-
     _createGroundBuffers();
     _generateEnvironment();
 }
 
-void MPEngine::_createGroundBuffers()
+void FPEngine::_createGroundBuffers()
 {
     // TODO #8: expand our struct
     struct Vertex
@@ -271,7 +256,7 @@ void MPEngine::_createGroundBuffers()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 }
 
-void MPEngine::_createSkyBox()
+void FPEngine::_createSkyBox()
 {
     // // TODO #8: expand our struct
     struct VertexNormalTextured
@@ -318,7 +303,7 @@ void MPEngine::_createSkyBox()
 }
 
 
-GLuint MPEngine::_loadAndRegisterTexture(const char* FILENAME)
+GLuint FPEngine::_loadAndRegisterTexture(const char* FILENAME)
 {
     // our handle to the GPU
     GLuint textureHandle = 0;
@@ -384,13 +369,13 @@ GLuint MPEngine::_loadAndRegisterTexture(const char* FILENAME)
     return textureHandle;
 }
 
-void MPEngine::mSetupTextures()
+void FPEngine::mSetupTextures()
 {
     // TODO #09 - load textures
     _texHandles[TEXTURE_ID::SKYBOX] = _loadAndRegisterTexture("assets/textures/space.jpg");
 }
 
-void MPEngine::_generateEnvironment()
+void FPEngine::_generateEnvironment()
 {
     //******************************************************************
     // parameters to make up our grid size and spacing, feel free to
@@ -470,12 +455,11 @@ void MPEngine::_generateEnvironment()
     }
 }
 
-void MPEngine::mSetupScene()
+void FPEngine::mSetupScene()
 {
-    heroIndex = 0;
 
     _pArcballCam = new CSCI441::ArcballCam();
-    _pArcballCam->setLookAtPoint(heroPositions[heroIndex]);
+    _pArcballCam->setLookAtPoint(glm::vec3(10, 10, 10));
     _pArcballCam->setTheta(0);
     _pArcballCam->setPhi(-M_PI / 1.8f);
     _pArcballCam->recomputeOrientation();
@@ -559,13 +543,13 @@ void MPEngine::mSetupScene()
 //
 // Engine Cleanup
 
-void MPEngine::mCleanupShaders()
+void FPEngine::mCleanupShaders()
 {
     fprintf(stdout, "[INFO]: ...deleting Shaders.\n");
     delete _textureShaderProgram;
 }
 
-void MPEngine::mCleanupBuffers()
+void FPEngine::mCleanupBuffers()
 {
     fprintf(stdout, "[INFO]: ...deleting VAOs....\n");
     CSCI441::deleteObjectVAOs();
@@ -575,9 +559,7 @@ void MPEngine::mCleanupBuffers()
     CSCI441::deleteObjectVBOs();
 
     fprintf(stdout, "[INFO]: ...deleting models..\n");
-    delete _sirByzler;
-    delete _ploopy;
-    delete _marcel;
+
 }
 
 
@@ -585,7 +567,7 @@ void MPEngine::mCleanupBuffers()
 //
 // Rendering / Drawing Functions - this is where the magic happens!
 
-void MPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
+void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 {
     // use our lighting shader program
     _textureShaderProgram->useProgram();
@@ -639,45 +621,9 @@ void MPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     }
     //// END DRAWING THE BUILDINGS ////
 
-
-    //// BEGIN DRAWING THE SIR BYZLER ////
-    modelMtx = glm::mat4(1.0f);
-    // we are going to cheat and use our look at point to place our plane so that it is always in view
-    modelMtx = glm::translate(modelMtx, heroPositions[0]);
-    // std::cout << _pArcballCam->getLookAtPoint().x << " " << _pArcballCam->getLookAtPoint().y << " " << _pArcballCam->getLookAtPoint().z << std::endl;
-    // rotate the vehicle to be upright
-    modelMtx = glm::rotate(modelMtx, heroDirections[0], CSCI441::Y_AXIS);
-    modelMtx = glm::rotate(modelMtx, float(M_PI / 2), CSCI441::X_AXIS);
-
-    // rotate according to current direction
-    // draw our plane now
-    _sirByzler->drawPlane(modelMtx, viewMtx, projMtx);
-
-
-    //// BEGIN DRAWING THE PLOOPY ////
-    modelMtx = glm::mat4(1.0f);
-    // we are going to cheat and use our look at point to place our plane so that it is always in view
-    modelMtx = glm::translate(modelMtx, heroPositions[1]);
-    // std::cout << _pArcballCam->getLookAtPoint().x << " " << _pArcballCam->getLookAtPoint().y << " " << _pArcballCam->getLookAtPoint().z << std::endl;
-    // rotate the vehicle to be upright
-    modelMtx = glm::rotate(modelMtx, heroDirections[1], CSCI441::Y_AXIS);
-    modelMtx = glm::rotate(modelMtx, float(M_PI / 2), CSCI441::X_AXIS);
-    _ploopy->drawPlane(modelMtx, viewMtx, projMtx);
-
-
-    //// BEGIN DRAWING THE MARCEL ////
-    modelMtx = glm::mat4(1.0f);
-    // we are going to cheat and use our look at point to place our plane so that it is always in view
-    modelMtx = glm::translate(modelMtx, heroPositions[2]);
-    // std::cout << _pArcballCam->getLookAtPoint().x << " " << _pArcballCam->getLookAtPoint().y << " " << _pArcballCam->getLookAtPoint().z << std::endl;
-    // rotate the vehicle to be upright
-    modelMtx = glm::rotate(modelMtx, heroDirections[2], CSCI441::Y_AXIS);
-    modelMtx = glm::rotate(modelMtx, float(M_PI / 2), CSCI441::X_AXIS);
-    _marcel->drawPlane(modelMtx, viewMtx, projMtx);
-    //// END DRAWING THE PLANE ////
 }
 
-void MPEngine::_updateScene()
+void FPEngine::_updateScene()
 {
     // switch cams
     if (_keys[GLFW_KEY_SPACE])
@@ -693,30 +639,6 @@ void MPEngine::_updateScene()
 
         _keys[GLFW_KEY_SPACE] = false;
     }
-    // turn vehicle right
-    if (_keys[GLFW_KEY_D] || _keys[GLFW_KEY_RIGHT])
-    {
-        if (cameraIndex == 0)
-        {
-            heroDirections[heroIndex] -= .1;
-        }
-        else
-        {
-            // FRECAM STUFF
-        }
-    }
-    // turn vehicle left
-    if (_keys[GLFW_KEY_A] || _keys[GLFW_KEY_LEFT])
-    {
-        if (cameraIndex == 0)
-        {
-            heroDirections[heroIndex] += .1;
-        }
-        else
-        {
-            // FREECAM STUFF
-        }
-    }
 
     if (_keys[GLFW_KEY_F]) {
         if (firstPerson) {
@@ -727,109 +649,21 @@ void MPEngine::_updateScene()
         _keys[GLFW_KEY_F] = false;
     }
 
-    // move vehicle forward
-    if (_keys[GLFW_KEY_W] || _keys[GLFW_KEY_UP])
-    {
-        if (cameraIndex == 0)
-        {
-            heroPositions[heroIndex] = heroPositions[heroIndex] - glm::vec3(
-                sin(heroDirections[heroIndex]) / 10, 0.0f, (cos(heroDirections[heroIndex]) / 10));
-            if (abs(heroPositions[heroIndex].x) < 55 &&
-                abs(heroPositions[heroIndex].z) < 55)
-            {
-                _pArcballCam->setLookAtPoint(heroPositions[heroIndex]);
-            }
-            _pArcballCam->recomputeOrientation();
-            if (heroIndex == 0)
-            {
-                _sirByzler->flyForward();
-            }
-            else if (heroIndex == 1)
-            {
-                _ploopy->flyForward();
-            }
-            else
-            {
-                _marcel->flyForward();
-            }
-            _sirByzler->flyForward();
-        }
-        else
-        {
-            _pFreeCam->moveForward(0.5f);
-        }
+    // move cart forward
+    if (_keys[GLFW_KEY_W] || _keys[GLFW_KEY_UP]) {
+
     }
-    _pMapCam->setTheta(-heroDirections[heroIndex]);
-    _pMapCam->setPosition(heroPositions[heroIndex] + glm::vec3(0.0f, 0.5f, 0.0f));
+
     _pMapCam->recomputeOrientation();
 
-    // switch heros
-    if (_keys[GLFW_KEY_PERIOD])
-    {
-        heroIndex += 1;
-        if (heroIndex == 3)
-        {
-            heroIndex = 0;
-        }
-        if (cameraIndex == 0)
-        {
-            _pArcballCam->setLookAtPoint(heroPositions[heroIndex]);
-            _pArcballCam->recomputeOrientation();
-        }
 
-        _keys[GLFW_KEY_PERIOD] = false;
-    }
+    // move cart backward
+    if (_keys[GLFW_KEY_S] || _keys[GLFW_KEY_DOWN]) {
 
-    // switch heros
-    if (_keys[GLFW_KEY_COMMA])
-    {
-        heroIndex -= 1;
-        if (heroIndex == -1)
-        {
-            heroIndex = 2;
-        }
-        if (cameraIndex == 0)
-        {
-            _pArcballCam->setLookAtPoint(heroPositions[heroIndex]);
-            _pArcballCam->recomputeOrientation();
-        }
-        _keys[GLFW_KEY_COMMA] = false;
-    }
-
-    // move vehicle backward
-    if (_keys[GLFW_KEY_S] || _keys[GLFW_KEY_DOWN])
-    {
-        if (cameraIndex == 0)
-        {
-            heroPositions[heroIndex] = heroPositions[heroIndex] + glm::vec3(
-                sin(heroDirections[heroIndex]) / 10, 0.0f, (cos(heroDirections[heroIndex]) / 10));
-            if (abs(heroPositions[heroIndex].x) < 55 &&
-                abs(heroPositions[heroIndex].z) < 55)
-            {
-                _pArcballCam->setLookAtPoint(heroPositions[heroIndex]);
-            }
-            _pArcballCam->recomputeOrientation();
-            if (heroIndex == 0)
-            {
-                _sirByzler->flyBackward();
-            }
-            else if (heroIndex == 1)
-            {
-                _ploopy->flyBackward();
-            }
-            else
-            {
-                _marcel->flyBackward();
-            }
-        }
-        else
-        {
-            _pFreeCam->moveBackward(0.5f);
-        }
     }
 }
 
-void MPEngine::run()
+void FPEngine::run()
 {
     //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
     //	until the user decides to close the window and quit the program.  Without a loop, the
@@ -870,7 +704,7 @@ void MPEngine::run()
 //
 // Private Helper Functions
 
-void MPEngine::_computeAndSendMatrixUniforms(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) const
+void FPEngine::_computeAndSendMatrixUniforms(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) const
 {
     // precompute the Model-View-Projection matrix on the CPU
     glm::mat4 mvpMtx = projMtx * viewMtx * modelMtx;
@@ -888,7 +722,7 @@ void MPEngine::_computeAndSendMatrixUniforms(glm::mat4 modelMtx, glm::mat4 viewM
 
 void a3_engine_keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    auto engine = (MPEngine*)glfwGetWindowUserPointer(window);
+    auto engine = (FPEngine*)glfwGetWindowUserPointer(window);
 
     // pass the key and action through to the engine
     engine->handleKeyEvent(key, action);
@@ -896,7 +730,7 @@ void a3_engine_keyboard_callback(GLFWwindow* window, int key, int scancode, int 
 
 void a3_engine_cursor_callback(GLFWwindow* window, double x, double y)
 {
-    auto engine = (MPEngine*)glfwGetWindowUserPointer(window);
+    auto engine = (FPEngine*)glfwGetWindowUserPointer(window);
 
     // pass the cursor position through to the engine
     engine->handleCursorPositionEvent(glm::vec2(x, y));
@@ -904,7 +738,7 @@ void a3_engine_cursor_callback(GLFWwindow* window, double x, double y)
 
 void a3_engine_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    auto engine = (MPEngine*)glfwGetWindowUserPointer(window);
+    auto engine = (FPEngine*)glfwGetWindowUserPointer(window);
 
     // pass the mouse button and action through to the engine
     engine->handleMouseButtonEvent(button, action);

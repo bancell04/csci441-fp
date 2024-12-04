@@ -6,16 +6,12 @@
 #include <CSCI441/OpenGLEngine.hpp>
 #include <CSCI441/ShaderProgram.hpp>
 
-#include "SirByzler.h"
-#include "Ploopy.h"
-#include "Marcel.h"
-
 #include <vector>
 
-class MPEngine final : public CSCI441::OpenGLEngine {
+class FPEngine final : public CSCI441::OpenGLEngine {
 public:
-    MPEngine();
-    ~MPEngine() final;
+    FPEngine();
+    ~FPEngine() final;
 
     void run() final;
 
@@ -81,25 +77,6 @@ private:
     bool firstPerson = true;
     /// \desc our plane model
 
-    SirByzler* _sirByzler;
-    Ploopy* _ploopy;
-    Marcel* _marcel;
-
-    float currDirection;
-    int heroIndex = 0;
-    // INDEX 0 - byzler
-    // INDEX 1 - ploopy
-    // INDEX 2 - marcel
-    float heroDirections[3] = {
-        0.0f,
-        0.0f,
-        0.0f
-    };
-    glm::vec3 heroPositions[3] = {
-        glm::vec3(0.0f, 0.1f, 0.0f),
-        glm::vec3(1.0f, 0.1f, 0.0f),
-        glm::vec3(0.0f, 0.1f, 1.0f)
-    };
 
     /// \desc the size of the world (controls the ground size and locations of buildings)
     static constexpr GLfloat WORLD_SIZE = 55.0f;
