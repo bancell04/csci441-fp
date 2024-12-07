@@ -140,46 +140,61 @@ private:
     //***************************************************************************
     // Shader Program Information
 
+
     /// \desc shader program that performs texturing
-    CSCI441::ShaderProgram* _textureShaderProgram;
-    /// \desc stores the locations of all of our shader uniforms
-    struct TextureShaderUniformLocations {
-        /// \desc precomputed MVP matrix location
+    // Define the structs once
+    struct shaderUniformLocations {
         GLint mvpMatrix;
-        // TODO #11 - texture map
         GLint texMap;
         GLint materialColor;
         GLint normalMatrix;
         GLint cameraPos;
         GLint useTexture;
         // Light uniforms
-        // directional
         GLint lightDirection;
         GLint lightColor;
-
-        // spotlight
         GLint spotlightPos;
         GLint spotlightDir;
         GLint spotlightColor;
         GLint spotlightCutOff;
         GLint spotlightOuterCutOff;
-
-        // point light
         GLint pointlightPos;
         GLint pointlightColor;
+        GLfloat time;
+    };
 
-    } _textureShaderUniformLocations;
-    /// \desc stores the locations of all of our shader attributes
-    struct TextureShaderAttributeLocations {
-        /// \desc vertex position location
+    struct shaderAttributeLocations {
         GLint vPos;
-        /// \desc vertex normal location
-        /// \note not used in this lab
         GLint vNormal;
-        // TODO #10 - texture coordinate
         GLint texCoord;
+    };
 
-    } _textureShaderAttributeLocations;
+    CSCI441::ShaderProgram* _regularShaderProgram;
+    shaderUniformLocations _regularShaderUniformLocations;
+    shaderAttributeLocations _regularShaderAttributeLocations;
+
+    CSCI441::ShaderProgram* _glitchedShaderProgram;
+    shaderUniformLocations _glitchedShaderUniformLocations;
+    shaderAttributeLocations _glitchedShaderAttributeLocations;
+
+    int shaderIndex;
+
+    CSCI441::ShaderProgram* _shaderPrograms[2] = {
+        _regularShaderProgram,
+        _glitchedShaderProgram
+    };
+
+    shaderAttributeLocations* _shaderAttributeLocations[2] = {
+        &_regularShaderAttributeLocations,
+        &_glitchedShaderAttributeLocations
+    };
+
+    shaderUniformLocations* _shaderUniformLocations[2] = {
+        &_regularShaderUniformLocations,
+        &_glitchedShaderUniformLocations
+    };
+
+
 };
 
 

@@ -157,41 +157,38 @@ void FPEngine::mSetupOpenGL()
 
 void FPEngine::mSetupShaders()
 {
-    _textureShaderProgram = new CSCI441::ShaderProgram("shaders/mp.v.glsl", "shaders/mp.f.glsl");
-    // query uniform locations
-    _textureShaderUniformLocations.mvpMatrix = _textureShaderProgram->getUniformLocation("mvpMatrix");
-    // TODO #12A - texture map
-    _textureShaderUniformLocations.useTexture = _textureShaderProgram->getUniformLocation("useTexture");
-    _textureShaderUniformLocations.materialColor = _textureShaderProgram->getUniformLocation("materialColor");
-    _textureShaderUniformLocations.normalMatrix = _textureShaderProgram->getUniformLocation("normalMatrix");
-    _textureShaderUniformLocations.cameraPos = _textureShaderProgram->getUniformLocation("cameraPos");
 
+    _regularShaderProgram = new CSCI441::ShaderProgram("shaders/fp-std.v.glsl", "shaders/fp-std.f.glsl");
+    // query uniform locations
+    _regularShaderUniformLocations.mvpMatrix = _regularShaderProgram->getUniformLocation("mvpMatrix");
+    _regularShaderUniformLocations.time = _regularShaderProgram->getUniformLocation("time");
+    // TODO #12A - texture map
+    _regularShaderUniformLocations.useTexture = _regularShaderProgram->getUniformLocation("useTexture");
+    _regularShaderUniformLocations.materialColor = _regularShaderProgram->getUniformLocation("materialColor");
+    _regularShaderUniformLocations.normalMatrix = _regularShaderProgram->getUniformLocation("normalMatrix");
+    _regularShaderUniformLocations.cameraPos = _regularShaderProgram->getUniformLocation("cameraPos");
     // LIGHT
     // directional
-    _textureShaderUniformLocations.lightDirection = _textureShaderProgram->getUniformLocation("lightDirection");
-    _textureShaderUniformLocations.lightColor = _textureShaderProgram->getUniformLocation("lightColor");
-
+    _regularShaderUniformLocations.lightDirection = _regularShaderProgram->getUniformLocation("lightDirection");
+    _regularShaderUniformLocations.lightColor = _regularShaderProgram->getUniformLocation("lightColor");
     // spotlight
-    _textureShaderUniformLocations.spotlightDir = _textureShaderProgram->getUniformLocation("spotlightDir");
-    _textureShaderUniformLocations.spotlightPos = _textureShaderProgram->getUniformLocation("spotlightPos");
-    _textureShaderUniformLocations.spotlightColor = _textureShaderProgram->getUniformLocation("spotlightColor");
-    _textureShaderUniformLocations.spotlightOuterCutOff = _textureShaderProgram->getUniformLocation("spotlightOuterCutOff");
-    _textureShaderUniformLocations.spotlightCutOff = _textureShaderProgram->getUniformLocation("spotlightCutOff");
-
-    _textureShaderUniformLocations.pointlightPos = _textureShaderProgram->getUniformLocation("pointlightPos");
-    _textureShaderUniformLocations.pointlightColor = _textureShaderProgram->getUniformLocation("pointlightColor");
-
-
-
+    _regularShaderUniformLocations.spotlightDir = _regularShaderProgram->getUniformLocation("spotlightDir");
+    _regularShaderUniformLocations.spotlightPos = _regularShaderProgram->getUniformLocation("spotlightPos");
+    _regularShaderUniformLocations.spotlightColor = _regularShaderProgram->getUniformLocation("spotlightColor");
+    _regularShaderUniformLocations.spotlightOuterCutOff = _regularShaderProgram->getUniformLocation("spotlightOuterCutOff");
+    _regularShaderUniformLocations.spotlightCutOff = _regularShaderProgram->getUniformLocation("spotlightCutOff");
+    
+    // point light
+    _regularShaderUniformLocations.pointlightPos = _regularShaderProgram->getUniformLocation("pointlightPos");
+    _regularShaderUniformLocations.pointlightColor = _regularShaderProgram->getUniformLocation("pointlightColor");
     // query attribute locations
-    _textureShaderAttributeLocations.vPos = _textureShaderProgram->getAttributeLocation("vPos");
-    _textureShaderAttributeLocations.vNormal = _textureShaderProgram->getAttributeLocation("vNormal");
+    _regularShaderAttributeLocations.vPos = _regularShaderProgram->getAttributeLocation("vPos");
+    _regularShaderAttributeLocations.vNormal = _regularShaderProgram->getAttributeLocation("vNormal");
     // TODO #12B - texture coordinate
-    _textureShaderAttributeLocations.texCoord = _textureShaderProgram->getAttributeLocation("textCoord");
-
+    _regularShaderAttributeLocations.texCoord = _regularShaderProgram->getAttributeLocation("textCoord");
     // set static uniforms
     // TODO #13 - set uniform
-    _textureShaderProgram->setProgramUniform("textureMap", 0);
+    _regularShaderProgram->setProgramUniform("textureMap", 0);
 
 
     // hook up the CSCI441 object library to our shader program - MUST be done after the shader is used and before the objects are drawn
@@ -204,15 +201,73 @@ void FPEngine::mSetupShaders()
     // OR the alternative is to ensure that all of your shader programs use the
     // same attribute locations for the vertex position, normal, and texture coordinate
     // TODO #17 - set attribute
-    CSCI441::setVertexAttributeLocations(_textureShaderAttributeLocations.vPos,
-                                         _textureShaderAttributeLocations.vNormal,
-                                         _textureShaderAttributeLocations.texCoord);
+    CSCI441::setVertexAttributeLocations(_regularShaderAttributeLocations.vPos,
+                                         _regularShaderAttributeLocations.vNormal,
+                                         _regularShaderAttributeLocations.texCoord);
+
+
+
+    /* ######## GLITCHED SHADER ######## */
+    _glitchedShaderProgram = new CSCI441::ShaderProgram("shaders/fp-glitched.v.glsl", "shaders/fp-glitched.f.glsl");
+    // query uniform locations
+    _glitchedShaderUniformLocations.mvpMatrix = _glitchedShaderProgram->getUniformLocation("mvpMatrix");
+    _glitchedShaderUniformLocations.time = _glitchedShaderProgram->getUniformLocation("time");
+    // TODO #12A - texture map
+    _glitchedShaderUniformLocations.useTexture = _glitchedShaderProgram->getUniformLocation("useTexture");
+    _glitchedShaderUniformLocations.materialColor = _glitchedShaderProgram->getUniformLocation("materialColor");
+    _glitchedShaderUniformLocations.normalMatrix = _glitchedShaderProgram->getUniformLocation("normalMatrix");
+    _glitchedShaderUniformLocations.cameraPos = _glitchedShaderProgram->getUniformLocation("cameraPos");
+    // LIGHT
+    // directional
+    _glitchedShaderUniformLocations.lightDirection = _glitchedShaderProgram->getUniformLocation("lightDirection");
+    _glitchedShaderUniformLocations.lightColor = _glitchedShaderProgram->getUniformLocation("lightColor");
+    // spotlight
+    _glitchedShaderUniformLocations.spotlightDir = _glitchedShaderProgram->getUniformLocation("spotlightDir");
+    _glitchedShaderUniformLocations.spotlightPos = _glitchedShaderProgram->getUniformLocation("spotlightPos");
+    _glitchedShaderUniformLocations.spotlightColor = _glitchedShaderProgram->getUniformLocation("spotlightColor");
+    _glitchedShaderUniformLocations.spotlightOuterCutOff = _glitchedShaderProgram->getUniformLocation("spotlightOuterCutOff");
+    _glitchedShaderUniformLocations.spotlightCutOff = _glitchedShaderProgram->getUniformLocation("spotlightCutOff");
+    
+    // point light
+    _glitchedShaderUniformLocations.pointlightPos = _glitchedShaderProgram->getUniformLocation("pointlightPos");
+    _glitchedShaderUniformLocations.pointlightColor = _glitchedShaderProgram->getUniformLocation("pointlightColor");
+    // query attribute locations
+    _glitchedShaderAttributeLocations.vPos = _glitchedShaderProgram->getAttributeLocation("vPos");
+    _glitchedShaderAttributeLocations.vNormal = _glitchedShaderProgram->getAttributeLocation("vNormal");
+    // TODO #12B - texture coordinate
+    _glitchedShaderAttributeLocations.texCoord = _glitchedShaderProgram->getAttributeLocation("textCoord");
+    // set static uniforms
+    // TODO #13 - set uniform
+    _glitchedShaderProgram->setProgramUniform("textureMap", 0);
+
+
+    // hook up the CSCI441 object library to our shader program - MUST be done after the shader is used and before the objects are drawn
+    // if we have multiple shaders the flow would be:
+    //      1) shader->useProgram()
+    //      2) CSCI441::setVertexAttributeLocations()
+    //      3) CSCI441::draw*()
+    // but this lab only has one shader program ever in use, so we are safe to assign these values just once
+    //
+    // OR the alternative is to ensure that all of your shader programs use the
+    // same attribute locations for the vertex position, normal, and texture coordinate
+    // TODO #17 - set attribute
+    CSCI441::setVertexAttributeLocations(_glitchedShaderAttributeLocations.vPos,
+                                         _glitchedShaderAttributeLocations.vNormal,
+                                         _glitchedShaderAttributeLocations.texCoord);
+
+    
+    shaderIndex = 0;
+
+
+    _shaderPrograms[0] = _regularShaderProgram;
+    _shaderPrograms[1] = _glitchedShaderProgram;
 }
 
 void FPEngine::mSetupBuffers()
 {
     _createGroundBuffers();
     _generateEnvironment();
+
 }
 
 void FPEngine::_createGroundBuffers()
@@ -244,12 +299,11 @@ void FPEngine::_createGroundBuffers()
     glGenBuffers(2, vbods);
     glBindBuffer(GL_ARRAY_BUFFER, vbods[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(groundQuad), groundQuad, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)nullptr);
 
-    glEnableVertexAttribArray(_textureShaderAttributeLocations.vPos);
-    glVertexAttribPointer(_textureShaderAttributeLocations.vPos, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)nullptr);
-
-    glEnableVertexAttribArray(_textureShaderAttributeLocations.vNormal);
-    glVertexAttribPointer(_textureShaderAttributeLocations.vNormal, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vNormal);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vNormal, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                           (void*)nullptr);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbods[1]);
@@ -281,21 +335,21 @@ void FPEngine::_createSkyBox()
     glGenVertexArrays(1, &_groundVAO);
     glBindVertexArray(_groundVAO);
 
+
     GLuint vbods[2]; // 0 - VBO, 1 - IBO
     glGenBuffers(2, vbods);
     glBindBuffer(GL_ARRAY_BUFFER, vbods[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxWall), skyboxWall, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(_textureShaderAttributeLocations.vPos);
-    glVertexAttribPointer(_textureShaderAttributeLocations.vPos, 3, GL_FLOAT, GL_FALSE, sizeof(VertexNormalTextured),
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, sizeof(VertexNormalTextured),
                           (void*)nullptr);
 
-    glEnableVertexAttribArray(_textureShaderAttributeLocations.vNormal);
-    glVertexAttribPointer(_textureShaderAttributeLocations.vNormal, 3, GL_FLOAT, GL_FALSE, sizeof(VertexNormalTextured),
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vNormal);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vNormal, 3, GL_FLOAT, GL_FALSE, sizeof(VertexNormalTextured),
                           (void*)(sizeof(glm::vec3)));
 
-    glEnableVertexAttribArray(_textureShaderAttributeLocations.texCoord);
-    glVertexAttribPointer(_textureShaderAttributeLocations.texCoord, 2, GL_FLOAT, GL_FALSE,
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->texCoord);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->texCoord, 2, GL_FLOAT, GL_FALSE,
                           sizeof(VertexNormalTextured), (void*)(2 * sizeof(glm::vec3)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbods[1]);
@@ -419,62 +473,68 @@ void FPEngine::mSetupScene()
     cameras[1] = _pFreeCam;
 
 
+
     // Directional Light
     glm::vec3 lightDirection = glm::vec3(-1, -1, -1);
     glm::vec3 lightColor = glm::vec3(1, 1, 1);
-    glProgramUniform3fv(
-        _textureShaderProgram->getShaderProgramHandle(),
-        _textureShaderUniformLocations.lightColor,
-        1,
-        glm::value_ptr(lightColor)
-    );
-
-    glProgramUniform3fv(
-        _textureShaderProgram->getShaderProgramHandle(),
-        _textureShaderUniformLocations.lightDirection,
-        1,
-        glm::value_ptr(lightDirection)
-    );
 
 
-    // Point light
-    glProgramUniform3fv(
-        _textureShaderProgram->getShaderProgramHandle(),
-        _textureShaderUniformLocations.pointlightColor,
-        1,
-        glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f))
-    );
+    for (int i = 0; i <= 1; i++) {
+        glProgramUniform3fv(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->lightColor,
+            1,
+            glm::value_ptr(lightColor)
+        );
 
-    glProgramUniform3fv(
-        _textureShaderProgram->getShaderProgramHandle(),
-        _textureShaderUniformLocations.pointlightPos,
-        1,
-        glm::value_ptr(glm::vec3(1.0f, 2.0f, 1.0f))
-    );
 
-    //spotlight
-    glProgramUniform3fv(
-        _textureShaderProgram->getShaderProgramHandle(),
-        _textureShaderUniformLocations.spotlightPos,
-        1,
-        glm::value_ptr(glm::vec3(50.0f, 2.0f, 50.0f))
-    );
-    glProgramUniform3fv(
-        _textureShaderProgram->getShaderProgramHandle(),
-        _textureShaderUniformLocations.spotlightDir,
-        1,
-        glm::value_ptr(glm::vec3(0.0f, -1, 0.0f))
-    );
-    glProgramUniform3fv(
-        _textureShaderProgram->getShaderProgramHandle(),
-        _textureShaderUniformLocations.spotlightColor,
-        1,
-        glm::value_ptr(glm::vec3(0.5f, 0.0f, 0.5f))
-    );
-    float innerCutoffAngle = 10.0f; // inner cutoff in degrees
-    float outerCutoffAngle = 15.0f; // outer cutoff in degrees
-    glUniform1f(_textureShaderUniformLocations.spotlightCutOff, cos(glm::radians(innerCutoffAngle)));
-    glUniform1f(_textureShaderUniformLocations.spotlightOuterCutOff, cos(glm::radians(outerCutoffAngle)));
+        glProgramUniform3fv(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->lightDirection,
+            1,
+            glm::value_ptr(lightDirection)
+        );
+
+
+        // Point light
+        glProgramUniform3fv(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->pointlightColor,
+            1,
+            glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f))
+        );
+
+        glProgramUniform3fv(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->pointlightPos,
+            1,
+            glm::value_ptr(glm::vec3(1.0f, 2.0f, 1.0f))
+        );
+
+        //spotlight
+        glProgramUniform3fv(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->spotlightPos,
+            1,
+            glm::value_ptr(glm::vec3(50.0f, 2.0f, 50.0f))
+        );
+        glProgramUniform3fv(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->spotlightDir,
+            1,
+            glm::value_ptr(glm::vec3(0.0f, -1, 0.0f))
+        );
+        glProgramUniform3fv(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->spotlightColor,
+            1,
+            glm::value_ptr(glm::vec3(0.5f, 0.0f, 0.5f))
+        );
+        float innerCutoffAngle = 10.0f; // inner cutoff in degrees
+        float outerCutoffAngle = 15.0f; // outer cutoff in degrees
+        glUniform1f(_shaderUniformLocations[i]->spotlightCutOff, cos(glm::radians(innerCutoffAngle)));
+        glUniform1f(_shaderUniformLocations[i]->spotlightOuterCutOff, cos(glm::radians(outerCutoffAngle)));
+    }
 }
 
 //*************************************************************************************
@@ -484,7 +544,8 @@ void FPEngine::mSetupScene()
 void FPEngine::mCleanupShaders()
 {
     fprintf(stdout, "[INFO]: ...deleting Shaders.\n");
-    delete _textureShaderProgram;
+    delete _regularShaderProgram;
+    delete _glitchedShaderProgram;
 }
 
 void FPEngine::mCleanupBuffers()
@@ -507,57 +568,37 @@ void FPEngine::mCleanupBuffers()
 
 void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 {
-    // use our lighting shader program
-    _textureShaderProgram->useProgram();
+    // use our texture shader program
+    _shaderPrograms[shaderIndex]->useProgram();
 
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->time, static_cast<float>(glfwGetTime()));
 
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.useTexture, 1); // Use texture for skybox
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 1); // Use texture for skybox
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::SKYBOX]);
     glm::mat4 modelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
     _computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.materialColor, glm::vec3(1.0f, 0.0f, 0.0f));
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(1.0f, 0.0f, 0.0f));
+
     CSCI441::drawSolidCubeTextured(100);
 
 
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.useTexture, 0); // Use texture for skybox
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0); // Don't use texture
     //// BEGIN DRAWING THE GROUND PLANE ////
     // draw the ground plane
     glm::mat4 groundModelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(WORLD_SIZE, 1.0f, WORLD_SIZE));
     _computeAndSendMatrixUniforms(groundModelMtx, viewMtx, projMtx);
 
     glm::vec3 groundColor(0.3f, 0.8f, 0.2f);
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.materialColor, groundColor);
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, groundColor);
 
-    // Assuming you have the camera position stored in a vec3 called 'cameraPosition'
     glm::vec3 cameraPosition = cameras[cameraIndex]->getPosition();
-    glUniform3fv(_textureShaderUniformLocations.cameraPos, 1, glm::value_ptr(cameraPosition));
+    glUniform3fv(_shaderUniformLocations[shaderIndex]->cameraPos, 1, glm::value_ptr(cameraPosition));
 
     glBindVertexArray(_groundVAO);
     glDrawElements(GL_TRIANGLE_STRIP, _numGroundPoints, GL_UNSIGNED_SHORT, (void*)0);
     //// END DRAWING THE GROUND PLANE ////
 
     //// BEGIN DRAWING THE BUILDINGS ////
-
-    bool treeToggle = false;
-    for (const BuildingData& currentBuilding : _buildings)
-    {
-        _computeAndSendMatrixUniforms(currentBuilding.modelMatrix, viewMtx, projMtx);
-
-        _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.materialColor, currentBuilding.color);
-
-        if (treeToggle == true)
-        {
-            CSCI441::drawSolidCone(1.0, 1.0, 10, 10);
-            //CSCI441::drawSolidCylinder(1.0, 1.0, 10, 10, 10);
-            treeToggle = false;
-        }
-        else if (treeToggle == false)
-        {
-            CSCI441::drawSolidCube(1.0);
-            treeToggle = true;
-        }
-    }
-    //// END DRAWING THE BUILDINGS ////
 
 }
 
@@ -585,6 +626,13 @@ void FPEngine::_updateScene()
             firstPerson = true;
         }
         _keys[GLFW_KEY_F] = false;
+    }
+
+    if (_keys[GLFW_KEY_1]) {
+        shaderIndex++;
+        shaderIndex = shaderIndex % 2;
+
+        _keys[GLFW_KEY_1] = false;
     }
 
     // move cart forward
@@ -651,11 +699,13 @@ void FPEngine::_computeAndSendMatrixUniforms(glm::mat4 modelMtx, glm::mat4 viewM
     // precompute the Model-View-Projection matrix on the CPU
     glm::mat4 mvpMtx = projMtx * viewMtx * modelMtx;
     // then send it to the shader on the GPU to apply to every vertex
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.mvpMatrix, mvpMtx);
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->mvpMatrix, mvpMtx);
+
 
     // TODO #7: compute and send the normal matrix
     glm::mat3 normalMtx = glm::mat3(glm::transpose(glm::inverse(modelMtx)));
-    _textureShaderProgram->setProgramUniform(_textureShaderUniformLocations.normalMatrix, normalMtx);
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->normalMatrix, normalMtx);
+
 }
 
 //*************************************************************************************
