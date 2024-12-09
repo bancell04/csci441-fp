@@ -5,6 +5,7 @@
 #include <CSCI441/FreeCam.hpp>
 #include <CSCI441/OpenGLEngine.hpp>
 #include <CSCI441/ShaderProgram.hpp>
+#include <CSCI441/ModelLoader.hpp>
 
 #include <vector>
 
@@ -97,6 +98,13 @@ private:
         /// \desc color to draw the building
         glm::vec3 color;
     };
+
+    struct CartData {
+        glm::mat4 modelMatrix;
+        glm::vec3 color;
+    };
+
+    CSCI441::ModelLoader* _pCartModel;
     /// \desc information list of all the buildings to draw
     std::vector<BuildingData> _buildings;
 

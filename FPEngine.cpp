@@ -268,6 +268,20 @@ void FPEngine::mSetupBuffers()
     _createGroundBuffers();
     _generateEnvironment();
 
+    _pCartModel = new CSCI441::ModelLoader();
+    _pCartModel->enableAutoGenerateNormals();
+    if ( _pCartModel->loadModelFile( "models/FPCart7.obj" ) )
+    {
+        _pCartModel->setAttributeLocations( _glitchedShaderAttributeLocations.vPos, _glitchedShaderAttributeLocations.vNormal );
+    }
+    else
+    {
+        fprintf( stderr, "[ERROR]: Could not open OBJ Model\n" );
+        delete _pCartModel;
+        _pCartModel = nullptr;
+    }
+
+
 }
 
 void FPEngine::_createGroundBuffers()
@@ -611,8 +625,26 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     glDrawElements(GL_TRIANGLE_STRIP, _numGroundPoints, GL_UNSIGNED_SHORT, (void*)0);
     //// END DRAWING THE GROUND PLANE ////
 
-    //// BEGIN DRAWING THE BUILDINGS ////
 
+    //// BEGIN DRAWING THE CART ////
+
+    glm::mat4 transToSpotMtx = glm::translate( glm::mat4( 1.0 ), glm::vec3( 0, 0.0f, 0 ) );
+
+    // compute full model matrix
+    glm::mat4 modelMatrix = transToSpotMtx;
+
+    _computeAndSendMatrixUniforms( modelMatrix, viewMtx, projMtx );
+
+    _glitchedShaderProgram->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 0.45, 0.3065, 0.0585 ) );
+
+    if ( _pCartModel != nullptr )
+    {
+        if ( !_pCartModel->draw( _glitchedShaderProgram->getShaderProgramHandle( ) ) )
+        {
+            fprintf( stderr, "[ERROR]: Could not draw OBJ Model\n" );
+            glfwSetWindowShouldClose( mpWindow, GLFW_TRUE );
+        }
+    }
 }
 
 void FPEngine::_updateScene()
