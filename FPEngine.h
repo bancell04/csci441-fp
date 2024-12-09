@@ -125,6 +125,7 @@ private:
     enum TEXTURE_ID {
         /// \desc metal texture
         SKYBOX = 0,
+        DIRT = 1,
         /// \desc Mines logo texture
     };
     /// \desc texture handles for our textures

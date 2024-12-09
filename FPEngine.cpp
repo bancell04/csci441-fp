@@ -276,15 +276,16 @@ void FPEngine::_createGroundBuffers()
     struct Vertex
     {
         glm::vec3 position;
-        float xNorm, yNorm, zNorm;
+        glm::vec3 normal;
+        float s, t;
     };
 
     // TODO #9: add normal data
     Vertex groundQuad[4] = {
-        {{-1.0f, 0.0f, -1.0f}, 0, 1, 0},
-        {{1.0f, 0.0f, -1.0f}, 0, 1, 0},
-        {{-1.0f, 0.0f, 1.0f}, 0, 1, 0},
-        {{1.0f, 0.0f, 1.0f}, 0, 1, 0}
+        {{-1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, 0.0, 0.0},
+        {{1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, 4.0, 0.0},
+        {{-1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, 0.0, 4.0},
+        {{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, 4.0, 4.0}
     };
 
 
@@ -292,22 +293,32 @@ void FPEngine::_createGroundBuffers()
 
     _numGroundPoints = 4;
 
+
     glGenVertexArrays(1, &_groundVAO);
     glBindVertexArray(_groundVAO);
 
-    GLuint vbods[2]; // 0 - VBO, 1 - IBO
+    GLuint vbods[2];
     glGenBuffers(2, vbods);
+
     glBindBuffer(GL_ARRAY_BUFFER, vbods[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(groundQuad), groundQuad, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
-    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)nullptr);
 
+    // Position attribute
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+    // Normal attribute
     glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vNormal);
-    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vNormal, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)nullptr);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vNormal, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec3));
+
+    // Texture coordinate attribute
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->texCoord);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->texCoord, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(2 * sizeof(glm::vec3)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbods[1]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
 }
 
 void FPEngine::_createSkyBox()
@@ -427,6 +438,7 @@ void FPEngine::mSetupTextures()
 {
     // TODO #09 - load textures
     _texHandles[TEXTURE_ID::SKYBOX] = _loadAndRegisterTexture("assets/textures/space.jpg");
+    _texHandles[TEXTURE_ID::DIRT] = _loadAndRegisterTexture("assets/textures/dirt.jpg");
 }
 
 void FPEngine::_generateEnvironment()
@@ -582,13 +594,14 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     CSCI441::drawSolidCubeTextured(100);
 
 
-    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0); // Don't use texture
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::DIRT]); // use dirt texture
+
     //// BEGIN DRAWING THE GROUND PLANE ////
     // draw the ground plane
     glm::mat4 groundModelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(WORLD_SIZE, 1.0f, WORLD_SIZE));
     _computeAndSendMatrixUniforms(groundModelMtx, viewMtx, projMtx);
 
-    glm::vec3 groundColor(0.3f, 0.8f, 0.2f);
+    glm::vec3 groundColor(0.0f, 0.0f, 0.0f);
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, groundColor);
 
     glm::vec3 cameraPosition = cameras[cameraIndex]->getPosition();
