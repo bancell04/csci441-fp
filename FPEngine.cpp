@@ -280,6 +280,8 @@ void FPEngine::mSetupBuffers()
         delete _pCartModel;
         _pCartModel = nullptr;
     }
+    
+    cartPos = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
 }
@@ -476,10 +478,11 @@ void FPEngine::_generateEnvironment()
 void FPEngine::mSetupScene()
 {
 
-    _pArcballCam = new CSCI441::ArcballCam();
-    _pArcballCam->setLookAtPoint(glm::vec3(10, 10, 10));
+    _pArcballCam = new CSCI441::ArcballCam(2.0f);
+    _pArcballCam->setLookAtPoint(cartPos);
     _pArcballCam->setTheta(0);
     _pArcballCam->setPhi(-M_PI / 1.8f);
+    _pArcballCam->moveBackward(5.0f);
     _pArcballCam->recomputeOrientation();
     _cameraSpeed = glm::vec2(0.1f, 0.05f);
     cameras[0] = _pArcballCam;
@@ -625,14 +628,13 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     glDrawElements(GL_TRIANGLE_STRIP, _numGroundPoints, GL_UNSIGNED_SHORT, (void*)0);
     //// END DRAWING THE GROUND PLANE ////
 
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0);  // don't texture
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(0.3f, 0.3f, 0.3f));
 
     //// BEGIN DRAWING THE CART ////
-
-    glm::mat4 transToSpotMtx = glm::translate( glm::mat4( 1.0 ), glm::vec3( 0, 0.0f, 0 ) );
-
+    glm::mat4 transToSpotMtx = glm::translate( glm::mat4( 1.0 ), cartPos );
     // compute full model matrix
-    glm::mat4 modelMatrix = transToSpotMtx;
-
+    glm::mat4 modelMatrix = glm::rotate(transToSpotMtx, cartDirection, CSCI441::Y_AXIS);
     _computeAndSendMatrixUniforms( modelMatrix, viewMtx, projMtx );
 
     _glitchedShaderProgram->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 0.45, 0.3065, 0.0585 ) );
@@ -645,6 +647,8 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
             glfwSetWindowShouldClose( mpWindow, GLFW_TRUE );
         }
     }
+    
+    
 }
 
 void FPEngine::_updateScene()
@@ -684,6 +688,10 @@ void FPEngine::_updateScene()
     if (_keys[GLFW_KEY_W] || _keys[GLFW_KEY_UP]) {
         if (cameraIndex == 1) {
             cameras[cameraIndex]->moveForward(0.5f);
+        } else {
+            cartPos = cartPos + glm::vec3(sin(cartDirection) / 10, 0.0f, (cos(cartDirection) / 10));
+            _pArcballCam->setLookAtPoint(cartPos);
+            _pArcballCam->recomputeOrientation();
         }
     }
 
@@ -694,6 +702,24 @@ void FPEngine::_updateScene()
     if (_keys[GLFW_KEY_S] || _keys[GLFW_KEY_DOWN]) {
         if (cameraIndex == 1) {
             cameras[cameraIndex]->moveBackward(0.5f);
+        } else {
+            cartPos = cartPos - glm::vec3(sin(cartDirection) / 10, 0.0f, (cos(cartDirection) / 10));
+            _pArcballCam->setLookAtPoint(cartPos);
+            _pArcballCam->recomputeOrientation();
+        }
+    }
+
+    // turn cart left
+    if (_keys[GLFW_KEY_A]) {
+        if (cameraIndex == 0) {
+            cartDirection += 0.1;
+        }
+    }
+
+    // turn cart left
+    if (_keys[GLFW_KEY_D]) {
+        if (cameraIndex == 0) {
+            cartDirection -= 0.1;
         }
     }
 }

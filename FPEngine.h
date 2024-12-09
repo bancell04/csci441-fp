@@ -105,6 +105,9 @@ private:
     };
 
     CSCI441::ModelLoader* _pCartModel;
+    glm::vec3 cartPos;
+    float cartDirection;
+
     /// \desc information list of all the buildings to draw
     std::vector<BuildingData> _buildings;
 
