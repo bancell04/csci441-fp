@@ -12,6 +12,10 @@
 class FPEngine final : public CSCI441::OpenGLEngine {
 public:
 
+    void FPEngine::_computeAndSendTransformationMatrices(CSCI441::ShaderProgram* shaderProgram,
+                                                            glm::mat4 modelMatrix, glm::mat4 viewMatrix,
+                                                            glm::mat4 projectionMatrix,
+                                                            GLint mvpMtxLocation, GLint normalMtxLocation) const;
 
     FPEngine();
     ~FPEngine() final;
@@ -123,7 +127,7 @@ private:
     /// \param p3 fourth control point
     /// \param t parameter to evaluate control points
     /// \returns interpolated point
-   glm::vec3 _evalBezierCurve(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t);
+   glm::vec3 _evalBezierCurve(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t) const;
 
     /// \desc the size of the world (controls the ground size and locations of buildings)
     static constexpr GLfloat WORLD_SIZE = 55.0f;

@@ -399,7 +399,7 @@ void FPEngine::_loadControlPoints(const char* FILENAME, GLuint* numBezierPoints,
     fclose(file);
 }
 glm::vec3 FPEngine::_evalBezierCurve(const glm::vec3 P0, const glm::vec3 P1, const glm::vec3 P2, const glm::vec3 P3,
-                                        const GLfloat T)
+                                        const GLfloat T) const
 {
     // TODO #01: solve the curve equation
     glm::vec3 bezierPoint = (1 - T) * (1 - T) * (1 - T) * P0 + 3 * (1 - T) * (1 - T) * T * P1 + 3 * (1 - T) * T * T * P2
@@ -753,7 +753,65 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
         }
     }
     
-    
+       //***************************************************************************
+    // draw the control poi
+    // draw each of the control points represented by a sphere
+    for (int i = 0; i < _bezierCurve.numControlPoints; i++)
+    {
+        modelMatrix = glm::translate(glm::mat4(1.0f), _bezierCurve.controlPoints[i]);
+        _computeAndSendTransformationMatrices(_regularShaderProgram[shaderIndex],
+                                              modelMatrix, viewMtx, projMtx,
+                                              _shaderUniformLocations[shaderIndex]->mvpMatrix,
+                                              _shaderUniformLocations[shaderIndex]->normalMatrix);
+        CSCI441::drawSolidSphere(0.25f, 16, 16);
+    }
+
+    //***************************************************************************
+    // draw the animated evaluation sphere
+
+    // use the bronze material
+
+    // TODO #03C: evaluate the current position along the curve system and draw a sphere at the current point
+    int i = static_cast<int>(_bezierCurve.objPos);
+
+    glm::vec3 P0 = _bezierCurve.controlPoints[i*3];
+    glm::vec3 P1 = _bezierCurve.controlPoints[i*3+1];
+    glm::vec3 P2 = _bezierCurve.controlPoints[i*3 + 2];
+    glm::vec3 P3 = _bezierCurve.controlPoints[i*3 + 3];
+
+    //remainder
+    GLfloat f = _bezierCurve.objPos - i;
+
+    glm::vec3 pos = _evalBezierCurve(P0, P1, P2, P3, f);
+
+    modelMatrix = glm::translate(glm::mat4(1.0f), pos);
+    _computeAndSendTransformationMatrices(_regularShaderProgram[shaderIndex],
+                                                  modelMatrix, viewMtx, projMtx,
+                                                  _shaderUniformLocations[shaderIndex]->mvpMatrix,
+                                                  _shaderUniformLocations[shaderIndex]->normalMatrix);
+
+    CSCI441::drawSolidSphere(0.25f, 16, 16);
+
+    //***************************************************************************
+    // draw the control cage
+
+    // use the flat shader to draw lines
+    // _flatShaderProgram->useProgram();
+    // modelMatrix = glm::mat4(1.0f);
+    // _computeAndSendTransformationMatrices(_flatShaderProgram,
+    //                                       modelMatrix, viewMtx, projMtx,
+    //                                       _flatShaderProgramUniformLocations.mvpMatrix);
+
+    // draw the curve control cage
+    glBindVertexArray(_vaos[VAO_ID::BEZIER_CAGE]);
+    glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CAGE]);
+
+    //***************************************************************************
+    // draw the curve
+
+    // LOOKHERE #1 draw the curve itself
+    glBindVertexArray(_vaos[VAO_ID::BEZIER_CURVE]);
+    glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CURVE]);
 }
 
 void FPEngine::_updateScene()
@@ -913,4 +971,22 @@ void a3_engine_mouse_button_callback(GLFWwindow* window, int button, int action,
 
     // pass the mouse button and action through to the engine
     engine->handleMouseButtonEvent(button, action);
+}
+void FPEngine::_computeAndSendTransformationMatrices(CSCI441::ShaderProgram* shaderProgram,
+                                                        glm::mat4 modelMatrix, glm::mat4 viewMatrix,
+                                                        glm::mat4 projectionMatrix,
+                                                        GLint mvpMtxLocation, GLint normalMtxLocation) const
+{
+    // ensure our shader program is not null
+    if (shaderProgram)
+    {
+        // precompute the MVP matrix CPU side
+        glm::mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
+        // precompute the Normal matrix CPU side
+        glm::mat3 normalMatrix = glm::mat3(glm::transpose(glm::inverse(modelMatrix)));
+
+        // send the matrices to the shader
+        shaderProgram->setProgramUniform(mvpMtxLocation, mvpMatrix);
+        shaderProgram->setProgramUniform(normalMtxLocation, normalMatrix);
+    }
 }
