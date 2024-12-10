@@ -9,8 +9,6 @@ uniform vec3 materialColor;             // Material color for the object
 // Directional light uniforms
 // Spotlight uniforms
 uniform vec3 spotlightPos;
-// Point light uniforms
-uniform vec3 pointlightPos;
 
 // Glitch effect uniform
 uniform float time;                     // Time for animated effects
@@ -29,10 +27,7 @@ layout(location = 3) out vec3 viewVector;
 
 layout(location = 4) out vec3 fspotDir;
 layout(location = 5) out float spotlightDist;
-
-layout(location = 6) out vec3 fpointDir;
-layout(location = 7) out float pointlightDist;
-layout(location = 8) out vec4 fragPosition;
+layout(location = 6) out vec4 fragPosition;
 
 // Pseudo-random displacement function
 float random(vec2 st) {
@@ -62,10 +57,6 @@ void main() {
     // Spotlight transformations
     fspotDir = normalize(spotlightPos - glitchedPos);
     spotlightDist = distance(glitchedPos, spotlightPos);
-
-    // Point light transformations
-    fpointDir = normalize(pointlightPos - glitchedPos);
-    pointlightDist = distance(glitchedPos, pointlightPos);
 
     // Material color and texture coordinates
     matColor = materialColor;

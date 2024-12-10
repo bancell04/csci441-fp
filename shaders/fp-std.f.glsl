@@ -20,9 +20,6 @@ uniform vec3 spotlightDir;
 uniform vec3 spotlightColor;
 uniform float spotlightCutOff;
 uniform float spotlightOuterCutOff;
-// point light uniforms
-uniform vec3 pointlightPos;
-uniform vec3 pointlightColor;
 
 
 layout(location = 2) in vec3 transNormalVector;
@@ -30,9 +27,6 @@ layout(location = 3) in vec3 viewVector;
 
 layout(location = 4) in vec3 fspotDir;
 layout(location = 5) in float spotlightDist;
-
-layout(location = 6) in vec3 fpointDir;
-layout(location = 7) in float pointlightDist;
 
 
 // outputs
@@ -73,14 +67,8 @@ void main() {
     vec3 spotLight = ((spotlightDiffuse + spotlightSpecular) * intensity) / (1 + (0.09*spotlightDist) + 0.032*pow((spotlightDist), 2));
 
 
-    // ******** POINT LIGHT ******** //
-    vec3 pointDiffuse = pointlightColor * max(dot(fpointDir, transNormalVector), 0.0);
-    vec3 pointReflectionVector = reflect(-fpointDir, transNormalVector);
-    vec3 pointSpectral = pointlightColor * pow(max(dot(viewVector, pointReflectionVector), 0.0), 16.0);
-    vec3 pointLight = (pointDiffuse + pointSpectral) / (1 + 0.8*pointlightDist + 0.01*pointlightDist*pointlightDist);
 
-
-    vec3 color = directLight + spotLight + pointLight;
+    vec3 color = directLight + spotLight;
     // if textured:
     if (useTexture) {
         vec4 texel = texture(textureMap, textCoordinate);

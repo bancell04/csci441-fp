@@ -178,9 +178,6 @@ void FPEngine::mSetupShaders()
     _regularShaderUniformLocations.spotlightOuterCutOff = _regularShaderProgram->getUniformLocation("spotlightOuterCutOff");
     _regularShaderUniformLocations.spotlightCutOff = _regularShaderProgram->getUniformLocation("spotlightCutOff");
     
-    // point light
-    _regularShaderUniformLocations.pointlightPos = _regularShaderProgram->getUniformLocation("pointlightPos");
-    _regularShaderUniformLocations.pointlightColor = _regularShaderProgram->getUniformLocation("pointlightColor");
     // query attribute locations
     _regularShaderAttributeLocations.vPos = _regularShaderProgram->getAttributeLocation("vPos");
     _regularShaderAttributeLocations.vNormal = _regularShaderProgram->getAttributeLocation("vNormal");
@@ -228,9 +225,6 @@ void FPEngine::mSetupShaders()
     _glitchedShaderUniformLocations.spotlightOuterCutOff = _glitchedShaderProgram->getUniformLocation("spotlightOuterCutOff");
     _glitchedShaderUniformLocations.spotlightCutOff = _glitchedShaderProgram->getUniformLocation("spotlightCutOff");
     
-    // point light
-    _glitchedShaderUniformLocations.pointlightPos = _glitchedShaderProgram->getUniformLocation("pointlightPos");
-    _glitchedShaderUniformLocations.pointlightColor = _glitchedShaderProgram->getUniformLocation("pointlightColor");
     // query attribute locations
     _glitchedShaderAttributeLocations.vPos = _glitchedShaderProgram->getAttributeLocation("vPos");
     _glitchedShaderAttributeLocations.vNormal = _glitchedShaderProgram->getAttributeLocation("vNormal");
@@ -267,6 +261,22 @@ void FPEngine::mSetupBuffers()
 {
     _createGroundBuffers();
     _generateEnvironment();
+
+    _pCartModel = new CSCI441::ModelLoader();
+    _pCartModel->enableAutoGenerateNormals();
+    if ( _pCartModel->loadModelFile( "models/FPCart7.obj" ) )
+    {
+        _pCartModel->setAttributeLocations( _glitchedShaderAttributeLocations.vPos, _glitchedShaderAttributeLocations.vNormal );
+    }
+    else
+    {
+        fprintf( stderr, "[ERROR]: Could not open OBJ Model\n" );
+        delete _pCartModel;
+        _pCartModel = nullptr;
+    }
+    
+    cartPos = glm::vec3(0.0f, 0.0f, 0.0f);
+
 
 }
 
@@ -364,15 +374,16 @@ void FPEngine::_createGroundBuffers()
     struct Vertex
     {
         glm::vec3 position;
-        float xNorm, yNorm, zNorm;
+        glm::vec3 normal;
+        float s, t;
     };
 
     // TODO #9: add normal data
     Vertex groundQuad[4] = {
-        {{-1.0f, 0.0f, -1.0f}, 0, 1, 0},
-        {{1.0f, 0.0f, -1.0f}, 0, 1, 0},
-        {{-1.0f, 0.0f, 1.0f}, 0, 1, 0},
-        {{1.0f, 0.0f, 1.0f}, 0, 1, 0}
+        {{-1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, 0.0, 0.0},
+        {{1.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, 4.0, 0.0},
+        {{-1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, 0.0, 4.0},
+        {{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}, 4.0, 4.0}
     };
 
 
@@ -380,22 +391,32 @@ void FPEngine::_createGroundBuffers()
 
     _numGroundPoints = 4;
 
+
     glGenVertexArrays(1, &_groundVAO);
     glBindVertexArray(_groundVAO);
 
-    GLuint vbods[2]; // 0 - VBO, 1 - IBO
+    GLuint vbods[2];
     glGenBuffers(2, vbods);
+
     glBindBuffer(GL_ARRAY_BUFFER, vbods[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(groundQuad), groundQuad, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
-    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)nullptr);
 
+    // Position attribute
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+    // Normal attribute
     glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vNormal);
-    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vNormal, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)nullptr);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vNormal, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec3));
+
+    // Texture coordinate attribute
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->texCoord);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->texCoord, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(2 * sizeof(glm::vec3)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbods[1]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
 }
 
 void FPEngine::_createSkyBox()
@@ -515,6 +536,7 @@ void FPEngine::mSetupTextures()
 {
     // TODO #09 - load textures
     _texHandles[TEXTURE_ID::SKYBOX] = _loadAndRegisterTexture("assets/textures/space.jpg");
+    _texHandles[TEXTURE_ID::DIRT] = _loadAndRegisterTexture("assets/textures/dirt.jpg");
 }
 
 void FPEngine::_generateEnvironment()
@@ -538,10 +560,11 @@ void FPEngine::_generateEnvironment()
 void FPEngine::mSetupScene()
 {
 
-    _pArcballCam = new CSCI441::ArcballCam();
-    _pArcballCam->setLookAtPoint(glm::vec3(10, 10, 10));
+    _pArcballCam = new CSCI441::ArcballCam(2.0f);
+    _pArcballCam->setLookAtPoint(cartPos);
     _pArcballCam->setTheta(0);
     _pArcballCam->setPhi(-M_PI / 1.8f);
+    _pArcballCam->moveBackward(5.0f);
     _pArcballCam->recomputeOrientation();
     _cameraSpeed = glm::vec2(0.1f, 0.05f);
     cameras[0] = _pArcballCam;
@@ -581,22 +604,6 @@ void FPEngine::mSetupScene()
             _shaderUniformLocations[i]->lightDirection,
             1,
             glm::value_ptr(lightDirection)
-        );
-
-
-        // Point light
-        glProgramUniform3fv(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->pointlightColor,
-            1,
-            glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f))
-        );
-
-        glProgramUniform3fv(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->pointlightPos,
-            1,
-            glm::value_ptr(glm::vec3(1.0f, 2.0f, 1.0f))
         );
 
         //spotlight
@@ -670,13 +677,14 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     CSCI441::drawSolidCubeTextured(100);
 
 
-    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0); // Don't use texture
+    glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::DIRT]); // use dirt texture
+
     //// BEGIN DRAWING THE GROUND PLANE ////
     // draw the ground plane
     glm::mat4 groundModelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(WORLD_SIZE, 1.0f, WORLD_SIZE));
     _computeAndSendMatrixUniforms(groundModelMtx, viewMtx, projMtx);
 
-    glm::vec3 groundColor(0.3f, 0.8f, 0.2f);
+    glm::vec3 groundColor(0.0f, 0.0f, 0.0f);
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, groundColor);
 
     glm::vec3 cameraPosition = cameras[cameraIndex]->getPosition();
@@ -686,8 +694,27 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     glDrawElements(GL_TRIANGLE_STRIP, _numGroundPoints, GL_UNSIGNED_SHORT, (void*)0);
     //// END DRAWING THE GROUND PLANE ////
 
-    //// BEGIN DRAWING THE BUILDINGS ////
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0);  // don't texture
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(0.3f, 0.3f, 0.3f));
 
+    //// BEGIN DRAWING THE CART ////
+    glm::mat4 transToSpotMtx = glm::translate( glm::mat4( 1.0 ), cartPos );
+    // compute full model matrix
+    glm::mat4 modelMatrix = glm::rotate(transToSpotMtx, cartDirection, CSCI441::Y_AXIS);
+    _computeAndSendMatrixUniforms( modelMatrix, viewMtx, projMtx );
+
+    _glitchedShaderProgram->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 0.45, 0.3065, 0.0585 ) );
+
+    if ( _pCartModel != nullptr )
+    {
+        if ( !_pCartModel->draw( _glitchedShaderProgram->getShaderProgramHandle( ) ) )
+        {
+            fprintf( stderr, "[ERROR]: Could not draw OBJ Model\n" );
+            glfwSetWindowShouldClose( mpWindow, GLFW_TRUE );
+        }
+    }
+    
+    
 }
 
 void FPEngine::_updateScene()
@@ -727,6 +754,10 @@ void FPEngine::_updateScene()
     if (_keys[GLFW_KEY_W] || _keys[GLFW_KEY_UP]) {
         if (cameraIndex == 1) {
             cameras[cameraIndex]->moveForward(0.5f);
+        } else {
+            cartPos = cartPos + glm::vec3(sin(cartDirection) / 10, 0.0f, (cos(cartDirection) / 10));
+            _pArcballCam->setLookAtPoint(cartPos);
+            _pArcballCam->recomputeOrientation();
         }
     }
 
@@ -737,6 +768,24 @@ void FPEngine::_updateScene()
     if (_keys[GLFW_KEY_S] || _keys[GLFW_KEY_DOWN]) {
         if (cameraIndex == 1) {
             cameras[cameraIndex]->moveBackward(0.5f);
+        } else {
+            cartPos = cartPos - glm::vec3(sin(cartDirection) / 10, 0.0f, (cos(cartDirection) / 10));
+            _pArcballCam->setLookAtPoint(cartPos);
+            _pArcballCam->recomputeOrientation();
+        }
+    }
+
+    // turn cart left
+    if (_keys[GLFW_KEY_A]) {
+        if (cameraIndex == 0) {
+            cartDirection += 0.1;
+        }
+    }
+
+    // turn cart left
+    if (_keys[GLFW_KEY_D]) {
+        if (cameraIndex == 0) {
+            cartDirection -= 0.1;
         }
     }
 }
