@@ -523,24 +523,33 @@ void FPEngine::mSetupScene()
             _shaderPrograms[i]->getShaderProgramHandle(),
             _shaderUniformLocations[i]->spotlightPos,
             1,
-            glm::value_ptr(glm::vec3(50.0f, 2.0f, 50.0f))
+            glm::value_ptr(glm::vec3(0.0f, 5.0f, 0.0f))
         );
         glProgramUniform3fv(
             _shaderPrograms[i]->getShaderProgramHandle(),
             _shaderUniformLocations[i]->spotlightDir,
             1,
-            glm::value_ptr(glm::vec3(0.0f, -1, 0.0f))
+            glm::value_ptr(glm::vec3(0.0f, -1.0f, 0.0f))
         );
         glProgramUniform3fv(
             _shaderPrograms[i]->getShaderProgramHandle(),
             _shaderUniformLocations[i]->spotlightColor,
             1,
-            glm::value_ptr(glm::vec3(0.5f, 0.0f, 0.5f))
+            glm::value_ptr(glm::vec3(1.0f, 0.0f, 1.0f))
         );
         float innerCutoffAngle = 10.0f; // inner cutoff in degrees
         float outerCutoffAngle = 15.0f; // outer cutoff in degrees
-        glUniform1f(_shaderUniformLocations[i]->spotlightCutOff, cos(glm::radians(innerCutoffAngle)));
-        glUniform1f(_shaderUniformLocations[i]->spotlightOuterCutOff, cos(glm::radians(outerCutoffAngle)));
+        glProgramUniform1f(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->spotlightCutOff,
+            cos(glm::radians(innerCutoffAngle))
+        );
+        glProgramUniform1f(
+            _shaderPrograms[i]->getShaderProgramHandle(),
+            _shaderUniformLocations[i]->spotlightOuterCutOff,
+            cos(glm::radians(outerCutoffAngle))
+        );
+
     }
 }
 
@@ -580,6 +589,39 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->time, static_cast<float>(glfwGetTime()));
 
+
+    //spotlight
+    glProgramUniform3fv(
+        _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
+        _shaderUniformLocations[shaderIndex]->spotlightPos,
+        1,
+        glm::value_ptr(glm::vec3(0.0f, 5.0f, 0.0f))
+    );
+    glProgramUniform3fv(
+        _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
+        _shaderUniformLocations[shaderIndex]->spotlightDir,
+        1,
+        glm::value_ptr(glm::vec3(0.0f, -1.0f, 0.0f))
+    );
+    glProgramUniform3fv(
+        _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
+        _shaderUniformLocations[shaderIndex]->spotlightColor,
+        1,
+        glm::value_ptr(glm::vec3(1.0f, 0.0f, 1.0f))
+    );
+    float innerCutoffAngle = 10.0f; // inner cutoff in degrees
+    float outerCutoffAngle = 15.0f; // outer cutoff in degrees
+    glProgramUniform1f(
+        _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
+        _shaderUniformLocations[shaderIndex]->spotlightCutOff,
+        cos(glm::radians(innerCutoffAngle))
+    );
+    glProgramUniform1f(
+        _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
+        _shaderUniformLocations[shaderIndex]->spotlightOuterCutOff,
+        cos(glm::radians(outerCutoffAngle))
+    );
+
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 1); // Use texture for skybox
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::SKYBOX]);
     glm::mat4 modelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
@@ -591,6 +633,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::DIRT]); // use dirt texture
 
+    // _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0);
     //// BEGIN DRAWING THE GROUND PLANE ////
     // draw the ground plane
     glm::mat4 groundModelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(WORLD_SIZE, 1.0f, WORLD_SIZE));
