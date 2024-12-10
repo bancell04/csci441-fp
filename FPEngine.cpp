@@ -482,7 +482,7 @@ void FPEngine::mSetupScene()
     cameras[0] = _pArcballCam;
 
     _pMapCam = new CSCI441::FreeCam();
-    _pMapCam->setPosition(glm::vec3(10.0f, 2.0f, 3.0f)); // give the camera a scenic starting point
+    _pMapCam->setPosition(cartPos); // give the camera a scenic starting point
     _pMapCam->setTheta(-M_PI / 3.0f); // and a nice view
     _pMapCam->setPhi(M_PI / 2);
     _pMapCam->recomputeOrientation();
@@ -673,7 +673,6 @@ void FPEngine::_updateScene()
         }
     }
 
-    _pMapCam->recomputeOrientation();
 
 
     // move cart backward
@@ -700,6 +699,10 @@ void FPEngine::_updateScene()
             cartDirection -= 0.1;
         }
     }
+    
+    _pMapCam->setTheta(-cartDirection + M_PI);
+    _pMapCam->setPosition(cartPos + glm::vec3(0.0f, 2.0f, 0.0f));
+    _pMapCam->recomputeOrientation();
 }
 
 void FPEngine::run()
