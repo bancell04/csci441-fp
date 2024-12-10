@@ -2,6 +2,7 @@
 
 // Uniform inputs
 uniform mat4 mvpMatrix;                 // Precomputed Model-View-Projection Matrix
+uniform mat4 modelViewMtx;
 uniform mat3 normalMatrix;              // Normal matrix for transforming normals
 uniform vec3 cameraPos;
 uniform vec3 materialColor;             // Material color for the object
@@ -54,8 +55,9 @@ void main() {
     transNormalVector = normalize(normalMatrix * vNormal);
     viewVector = normalize(cameraPos - glitchedPos);
 
-    // Spotlight transformations
-    fspotDir = normalize(spotlightPos - glitchedPos);
+    vec3 worldPos = vec3(modelViewMtx * vec4(vPos, 1.0));
+
+    fspotDir = normalize(spotlightPos - vPos);
     spotlightDist = distance(glitchedPos, spotlightPos);
 
     // Material color and texture coordinates

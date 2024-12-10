@@ -9,10 +9,10 @@ uniform float time;
 uniform vec3 lightDirection;
 uniform vec3 lightColor;
 uniform vec3 spotlightPos;
-uniform vec3 spotlightDir;
 uniform vec3 spotlightColor;
 uniform float spotlightCutOff;
 uniform float spotlightOuterCutOff;
+uniform vec3 spotlightDir;
 
 // Varying inputs
 layout(location = 1) in vec2 textCoordinate;
@@ -49,7 +49,7 @@ void main() {
     vec3 spotReflectDir = reflect(-fspotDir, transNormalVector);
     float spotSpec = pow(max(dot(viewVector, spotReflectDir), 0.0), 32.0);
     vec3 spotlightSpecular = spotSpec * spotlightColor;
-    float theta = dot(fspotDir, normalize(-spotlightDir));
+    float theta = dot(normalize(fspotDir), normalize(-spotlightDir));
     float epsilon = spotlightCutOff - spotlightOuterCutOff;
     float intensity = clamp((theta - spotlightOuterCutOff) / epsilon, 0.0, 1.0);
     vec3 spotLight = ((spotlightDiffuse + spotlightSpecular) * intensity) / 

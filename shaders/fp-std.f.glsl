@@ -16,10 +16,10 @@ uniform vec3 lightDirection;
 uniform vec3 lightColor;
 // spotlight uniforms
 uniform vec3 spotlightPos;
-uniform vec3 spotlightDir;
 uniform vec3 spotlightColor;
 uniform float spotlightCutOff;
 uniform float spotlightOuterCutOff;
+uniform vec3 spotlightDir;
 
 
 layout(location = 2) in vec3 transNormalVector;
@@ -60,11 +60,12 @@ void main() {
     float spotSpec = pow(max(dot(viewVector, spotReflectDir), 0.0), 32.0);
     vec3 spotlightSpecular = spotSpec * spotlightColor;
     // Spotlight intensity based on cutoff angles
-    float theta = dot(fspotDir, normalize(-spotlightDir));
+    float theta = dot(normalize(fspotDir), normalize(-spotlightDir));
     float epsilon = spotlightCutOff - spotlightOuterCutOff;
     float intensity = clamp((theta - spotlightOuterCutOff) / epsilon, 0.0, 1.0);
     // Combine spotlight results with intensity
     vec3 spotLight = ((spotlightDiffuse + spotlightSpecular) * intensity) / (1 + (0.09*spotlightDist) + 0.032*pow((spotlightDist), 2));
+    // vec3 spotLight = spotlightColor * (spotlightDiffuse + spotlightSpecular);
 
 
 

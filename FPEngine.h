@@ -208,6 +208,7 @@ private:
     struct shaderUniformLocations {
         GLint mvpMatrix;
         GLint texMap;
+        GLint modelViewMtx;
         GLint materialColor;
         GLint normalMatrix;
         GLint cameraPos;
