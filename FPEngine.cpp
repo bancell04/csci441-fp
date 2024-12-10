@@ -178,9 +178,6 @@ void FPEngine::mSetupShaders()
     _regularShaderUniformLocations.spotlightOuterCutOff = _regularShaderProgram->getUniformLocation("spotlightOuterCutOff");
     _regularShaderUniformLocations.spotlightCutOff = _regularShaderProgram->getUniformLocation("spotlightCutOff");
     
-    // point light
-    _regularShaderUniformLocations.pointlightPos = _regularShaderProgram->getUniformLocation("pointlightPos");
-    _regularShaderUniformLocations.pointlightColor = _regularShaderProgram->getUniformLocation("pointlightColor");
     // query attribute locations
     _regularShaderAttributeLocations.vPos = _regularShaderProgram->getAttributeLocation("vPos");
     _regularShaderAttributeLocations.vNormal = _regularShaderProgram->getAttributeLocation("vNormal");
@@ -228,9 +225,6 @@ void FPEngine::mSetupShaders()
     _glitchedShaderUniformLocations.spotlightOuterCutOff = _glitchedShaderProgram->getUniformLocation("spotlightOuterCutOff");
     _glitchedShaderUniformLocations.spotlightCutOff = _glitchedShaderProgram->getUniformLocation("spotlightCutOff");
     
-    // point light
-    _glitchedShaderUniformLocations.pointlightPos = _glitchedShaderProgram->getUniformLocation("pointlightPos");
-    _glitchedShaderUniformLocations.pointlightColor = _glitchedShaderProgram->getUniformLocation("pointlightColor");
     // query attribute locations
     _glitchedShaderAttributeLocations.vPos = _glitchedShaderProgram->getAttributeLocation("vPos");
     _glitchedShaderAttributeLocations.vNormal = _glitchedShaderProgram->getAttributeLocation("vNormal");
@@ -522,22 +516,6 @@ void FPEngine::mSetupScene()
             _shaderUniformLocations[i]->lightDirection,
             1,
             glm::value_ptr(lightDirection)
-        );
-
-
-        // Point light
-        glProgramUniform3fv(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->pointlightColor,
-            1,
-            glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f))
-        );
-
-        glProgramUniform3fv(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->pointlightPos,
-            1,
-            glm::value_ptr(glm::vec3(1.0f, 2.0f, 1.0f))
         );
 
         //spotlight

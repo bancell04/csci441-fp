@@ -170,8 +170,6 @@ private:
         GLint spotlightColor;
         GLint spotlightCutOff;
         GLint spotlightOuterCutOff;
-        GLint pointlightPos;
-        GLint pointlightColor;
         GLfloat time;
     };
 

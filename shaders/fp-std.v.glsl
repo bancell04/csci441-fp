@@ -8,8 +8,6 @@ uniform vec3 materialColor;             // material color for the object
 // direction light uniforms
 // spotlight uniforms
 uniform vec3 spotlightPos;
-// point light uniforms
-uniform vec3 pointlightPos;
 
 // attribute inputs
 layout(location = 0) in vec3 vPos;      // position of vertex in object space
@@ -25,8 +23,6 @@ layout(location = 3) out vec3 viewVector;
 layout(location = 4) out vec3 fspotDir;
 layout(location = 5) out float spotlightDist;
 
-layout(location = 6) out vec3 fpointDir;
-layout(location = 7) out float pointlightDist;
 
 void main() {
     // transform & output the vertex in clip space
@@ -37,9 +33,6 @@ void main() {
 
     fspotDir = normalize(spotlightPos - vPos);
     spotlightDist = distance(vPos, spotlightPos);
-
-    fpointDir = normalize(pointlightPos - vPos);
-    pointlightDist = distance(vPos, pointlightPos);
 
     matColor = materialColor;
     // Pass texture coordinate to fragment shader
