@@ -169,6 +169,7 @@ void FPEngine::mSetupShaders()
     _regularShaderProgram = new CSCI441::ShaderProgram("shaders/fp-std.v.glsl", "shaders/fp-std.f.glsl");
     // query uniform locations
     _regularShaderUniformLocations.mvpMatrix = _regularShaderProgram->getUniformLocation("mvpMatrix");
+    _regularShaderUniformLocations.modelViewMtx = _regularShaderProgram->getUniformLocation("modelViewMtx");
     _regularShaderUniformLocations.time = _regularShaderProgram->getUniformLocation("time");
     // TODO #12A - texture map
     _regularShaderUniformLocations.useTexture = _regularShaderProgram->getUniformLocation("useTexture");
@@ -216,6 +217,7 @@ void FPEngine::mSetupShaders()
     _glitchedShaderProgram = new CSCI441::ShaderProgram("shaders/fp-glitched.v.glsl", "shaders/fp-glitched.f.glsl");
     // query uniform locations
     _glitchedShaderUniformLocations.mvpMatrix = _glitchedShaderProgram->getUniformLocation("mvpMatrix");
+    _glitchedShaderUniformLocations.modelViewMtx = _glitchedShaderProgram->getUniformLocation("modelViewMtx");
     _glitchedShaderUniformLocations.time = _glitchedShaderProgram->getUniformLocation("time");
     // TODO #12A - texture map
     _glitchedShaderUniformLocations.useTexture = _glitchedShaderProgram->getUniformLocation("useTexture");
@@ -922,7 +924,7 @@ void FPEngine::_computeAndSendMatrixUniforms(glm::mat4 modelMtx, glm::mat4 viewM
     glm::mat4 mvpMtx = projMtx * viewMtx * modelMtx;
     // then send it to the shader on the GPU to apply to every vertex
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->mvpMatrix, mvpMtx);
-
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->modelViewMtx, (viewMtx * modelMtx));
 
     // TODO #7: compute and send the normal matrix
     glm::mat3 normalMtx = glm::mat3(glm::transpose(glm::inverse(modelMtx)));
