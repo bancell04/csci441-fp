@@ -11,6 +11,8 @@
 
 class FPEngine final : public CSCI441::OpenGLEngine {
 public:
+
+
     FPEngine();
     ~FPEngine() final;
 
@@ -78,6 +80,50 @@ private:
     bool firstPerson = true;
     /// \desc our plane model
 
+    /// \desc Bezier Curve Information
+    struct BezierCurve {
+        /// \desc control points array
+        glm::vec3* controlPoints = nullptr;
+        /// \desc number of control points in the curve system.
+        /// \desc corresponds to the size of controlPoints array
+        GLuint numControlPoints = 0;
+        /// \desc number of curves in the system
+        GLuint numCurves = 0;
+        // TODO #03A: make a data member to track the current evaluation parameter
+        GLfloat objPos=0;
+
+    } _bezierCurve;
+
+    /// \desc creates the Bezier curve cage object
+    /// \param [in] vao VAO descriptor to bind
+    /// \param [in] vbo VBO descriptor to bind
+    /// \param [out] numVAOPoints sets the number of vertices that make up the IBO array
+    void _createCage(GLuint vao, GLuint vbo, GLsizei &numVAOPoints) const;
+
+    /// \desc creates the Bezier curve object
+    /// \param [in] vao VAO descriptor to bind
+    /// \param [in] vbo VBO descriptor to bind
+    /// \param [out] numVAOPoints sets the number of vertices that make up the IBO array
+    void _createCurve(GLuint vao, GLuint vbo, GLsizei &numVAOPoints);
+
+    /// \desc This function loads the Bezier control points from a given file.  Upon
+    /// completion, the parameters will store the number of points read in, the
+    /// number of curves they represent, and the array of actual points.
+    /// \param [in] FILENAME file to load control points from
+    /// \param [out] numBezierPoints the number of points read in
+    /// \param [out] numBezierCurves the number of curves read in
+    /// \param [out] bezierPoints the points array read in
+    static void _loadControlPoints(const char* FILENAME, GLuint *numBezierPoints, GLuint *numBezierCurves, glm::vec3* &bezierPoints);
+
+    /// \desc This function solves the Bezier curve equation for four given control
+    /// points at a given location t.
+    /// \param p0 first control point
+    /// \param p1 second control point
+    /// \param p2 third control point
+    /// \param p3 fourth control point
+    /// \param t parameter to evaluate control points
+    /// \returns interpolated point
+   glm::vec3 _evalBezierCurve(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t);
 
     /// \desc the size of the world (controls the ground size and locations of buildings)
     static constexpr GLfloat WORLD_SIZE = 55.0f;
@@ -205,6 +251,24 @@ private:
     };
 
 
+    static constexpr GLuint NUM_VAOS = 3;
+    /// \desc used to index through our VAO/VBO/IBO array to give named access
+    enum VAO_ID {
+        /// \desc the platform that represents our ground for everything to appear on
+        PLATFORM = 0,
+        /// \desc the control points that form the cage for our bezier curve
+        BEZIER_CAGE = 1,
+        /// \desc the actual bezier curve itself
+        BEZIER_CURVE = 2
+    };
+    /// \desc VAO for our objects
+    GLuint _vaos[NUM_VAOS];
+    /// \desc VBO for our objects
+    GLuint _vbos[NUM_VAOS];
+    /// \desc IBO for our objects
+    GLuint _ibos[NUM_VAOS];
+    /// \desc the number of points that make up our VAO
+    GLsizei _numVAOPoints[NUM_VAOS];
 };
 
 

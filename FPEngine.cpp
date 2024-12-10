@@ -35,6 +35,14 @@ FPEngine::FPEngine()
 
     _mousePosition = glm::vec2(MOUSE_UNINITIALIZED, MOUSE_UNINITIALIZED);
     _leftMouseButtonState = GLFW_RELEASE;
+
+    for (GLuint i = 0; i < NUM_VAOS; i++)
+    {
+        _vaos[i] = 0;
+        _vbos[i] = 0;
+        _ibos[i] = 0;
+        _numVAOPoints[i] = 0;
+    }
 }
 
 FPEngine::~FPEngine()
@@ -277,9 +285,128 @@ void FPEngine::mSetupBuffers()
     
     cartPos = glm::vec3(0.0f, 0.0f, 0.0f);
 
+    glGenVertexArrays(NUM_VAOS, _vaos);
+    glGenBuffers(NUM_VAOS, _vbos);
+    glGenBuffers(NUM_VAOS, _ibos);
+
+    char* filename = (char*)malloc(sizeof(char) * 256);
+    filename = "data/controlPoints.csv";
+
+    _loadControlPoints(filename,
+                               &_bezierCurve.numControlPoints, &_bezierCurve.numCurves,
+                               _bezierCurve.controlPoints);
+    if (!_bezierCurve.controlPoints)
+    {
+        fprintf(stderr, "[ERROR]: Error loading control points from file\n");
+    }
+    else
+    {
+        fprintf(stdout, "[INFO]: Read in %u points comprising %u curves\n", _bezierCurve.numControlPoints,
+                _bezierCurve.numCurves);
+
+        // generate cage
+        _createCage(_vaos[VAO_ID::BEZIER_CAGE], _vbos[VAO_ID::BEZIER_CAGE], _numVAOPoints[VAO_ID::BEZIER_CAGE]);
+
+        // generate curve
+        _createCurve(_vaos[VAO_ID::BEZIER_CURVE], _vbos[VAO_ID::BEZIER_CURVE], _numVAOPoints[VAO_ID::BEZIER_CURVE]);
+    }
 
 }
 
+void FPEngine::_createCage(GLuint vao, GLuint vbo, GLsizei& numVAOPoints) const
+{
+        numVAOPoints = _bezierCurve.numControlPoints;
+
+        glBindVertexArray(vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, numVAOPoints * sizeof(glm::vec3), _bezierCurve.controlPoints, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
+        glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        fprintf(stdout, "[INFO]: control points cage read in with VAO/VBO %d/%d & %d points\n", vao, vbo, numVAOPoints);
+}
+
+void FPEngine::_createCurve(GLuint vao, GLuint vbo, GLsizei& numVAOPoints)
+{
+    // TODO #02: generate the Bezier curve
+    GLint resolution = 30;
+    numVAOPoints = resolution + 1;
+
+    fprintf(stdout, "[INFO]: bezier curve read in with VAO/VBO %d/%d & %d points\n", vao, vbo, numVAOPoints);
+    std::vector<glm::vec3> curvePoints;
+    for (int i = 0; i < _bezierCurve.numCurves; ++i)
+    {
+        glm::vec3 P0 = _bezierCurve.controlPoints[i*3];
+        glm::vec3 P1 = _bezierCurve.controlPoints[i*3+1];
+        glm::vec3 P2 = _bezierCurve.controlPoints[i*3 + 2];
+        glm::vec3 P3 = _bezierCurve.controlPoints[i*3 + 3];
+        for(int j = 0; j <= resolution; j++)
+        {
+            GLfloat x = static_cast<float>(j) / resolution;
+            glm::vec3 beizierPoint = _evalBezierCurve(P0, P1, P2, P3, x);
+            curvePoints.push_back(beizierPoint);
+        }
+    }
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, curvePoints.size() * sizeof(glm::vec3), curvePoints.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
+    glVertexAttribPointer(_shaderAttributeLocations[shaderIndex]->vPos, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+}
+
+void FPEngine::_loadControlPoints(const char* FILENAME, GLuint* numBezierPoints, GLuint* numBezierCurves,
+    glm::vec3*& bezierPoints)
+{
+    // open the file
+    FILE* file = fopen(FILENAME, "r");
+
+    // check that the file opened properly
+    if (!file)
+    {
+        fprintf(stderr, "[ERROR]: Could not open \"%s\"\n", FILENAME);
+    }
+    else
+    {
+        // first value is the number of points in the file
+        fscanf(file, "%u\n", numBezierPoints);
+
+        *numBezierCurves = (*numBezierPoints - 1) / 3;
+
+        fprintf(stdout, "[INFO]: Reading in %u control points\n", *numBezierPoints);
+
+        // allocate memory
+        bezierPoints = (glm::vec3*)malloc(sizeof(glm::vec3) * *numBezierPoints);
+        if (!bezierPoints)
+        {
+            fprintf(stderr, "[ERROR]: Could not allocate space for control points\n");
+        }
+        else
+        {
+            // read in all the points
+            for (int i = 0; i < *numBezierPoints; i++)
+            {
+                // each line is formatted as "x,y,z\n" as comma seperated floats
+                fscanf(file, "%f,%f,%f\n", &(bezierPoints[i].x), &(bezierPoints[i].y), &(bezierPoints[i].z));
+            }
+        }
+    }
+    // close the file
+    fclose(file);
+}
+glm::vec3 FPEngine::_evalBezierCurve(const glm::vec3 P0, const glm::vec3 P1, const glm::vec3 P2, const glm::vec3 P3,
+                                        const GLfloat T)
+{
+    // TODO #01: solve the curve equation
+    glm::vec3 bezierPoint = (1 - T) * (1 - T) * (1 - T) * P0 + 3 * (1 - T) * (1 - T) * T * P1 + 3 * (1 - T) * T * T * P2
+        + T * T * T * P3;
+
+    return bezierPoint;
+}
 void FPEngine::_createGroundBuffers()
 {
     // TODO #8: expand our struct
