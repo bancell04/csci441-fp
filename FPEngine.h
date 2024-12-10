@@ -11,6 +11,8 @@
 
 class FPEngine final : public CSCI441::OpenGLEngine {
 public:
+
+
     FPEngine();
     ~FPEngine() final;
 
@@ -102,7 +104,7 @@ private:
     /// \param [in] vao VAO descriptor to bind
     /// \param [in] vbo VBO descriptor to bind
     /// \param [out] numVAOPoints sets the number of vertices that make up the IBO array
-    void _createCurve(GLuint vao, GLuint vbo, GLsizei &numVAOPoints) const;
+    void _createCurve(GLuint vao, GLuint vbo, GLsizei &numVAOPoints);
 
     /// \desc This function loads the Bezier control points from a given file.  Upon
     /// completion, the parameters will store the number of points read in, the
@@ -121,7 +123,7 @@ private:
     /// \param p3 fourth control point
     /// \param t parameter to evaluate control points
     /// \returns interpolated point
-    [[nodiscard]] static glm::vec3 _evalBezierCurve(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t);
+   glm::vec3 _evalBezierCurve(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLfloat t);
 
     /// \desc the size of the world (controls the ground size and locations of buildings)
     static constexpr GLfloat WORLD_SIZE = 55.0f;
@@ -249,6 +251,24 @@ private:
     };
 
 
+    static constexpr GLuint NUM_VAOS = 3;
+    /// \desc used to index through our VAO/VBO/IBO array to give named access
+    enum VAO_ID {
+        /// \desc the platform that represents our ground for everything to appear on
+        PLATFORM = 0,
+        /// \desc the control points that form the cage for our bezier curve
+        BEZIER_CAGE = 1,
+        /// \desc the actual bezier curve itself
+        BEZIER_CURVE = 2
+    };
+    /// \desc VAO for our objects
+    GLuint _vaos[NUM_VAOS];
+    /// \desc VBO for our objects
+    GLuint _vbos[NUM_VAOS];
+    /// \desc IBO for our objects
+    GLuint _ibos[NUM_VAOS];
+    /// \desc the number of points that make up our VAO
+    GLsizei _numVAOPoints[NUM_VAOS];
 };
 
 
