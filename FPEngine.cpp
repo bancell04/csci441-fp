@@ -797,8 +797,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
         }
     }
     
-       //***************************************************************************
-    // draw the control poi
+    //***************************************************************************
     // draw each of the control points represented by a sphere
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 1);  // don't texture
     for (int i = 0; i < _bezierCurve.numControlPoints; i++)
@@ -848,8 +847,8 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     //                                       _flatShaderProgramUniformLocations.mvpMatrix);
 
     // draw the curve control cage
-    glBindVertexArray(_vaos[VAO_ID::BEZIER_CAGE]);
-    glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CAGE]);
+    // glBindVertexArray(_vaos[VAO_ID::BEZIER_CAGE]);
+    // glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CAGE]);
 
     //***************************************************************************
     // draw the curve
