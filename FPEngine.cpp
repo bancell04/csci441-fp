@@ -799,7 +799,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     
     //***************************************************************************
     // draw each of the control points represented by a sphere
-    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 1);  // don't texture
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0);  // don't texture
     for (int i = 0; i < _bezierCurve.numControlPoints; i++)
     {
         modelMatrix = glm::translate(glm::mat4(1.0f), _bezierCurve.controlPoints[i]);
