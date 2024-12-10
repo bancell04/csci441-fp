@@ -12,7 +12,7 @@
 class FPEngine final : public CSCI441::OpenGLEngine {
 public:
 
-    void FPEngine::_computeAndSendTransformationMatrices(CSCI441::ShaderProgram* shaderProgram,
+    void _computeAndSendTransformationMatrices(CSCI441::ShaderProgram* shaderProgram,
                                                             glm::mat4 modelMatrix, glm::mat4 viewMatrix,
                                                             glm::mat4 projectionMatrix,
                                                             GLint mvpMtxLocation, GLint normalMtxLocation) const;

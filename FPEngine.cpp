@@ -292,7 +292,7 @@ void FPEngine::mSetupBuffers()
     glGenBuffers(NUM_VAOS, _ibos);
 
     char* filename = (char*)malloc(sizeof(char) * 256);
-    filename = "data/controlPoints.csv";
+    filename = "data/rollercoaster.csv";
 
     _loadControlPoints(filename,
                                &_bezierCurve.numControlPoints, &_bezierCurve.numCurves,
@@ -333,7 +333,7 @@ void FPEngine::_createCage(GLuint vao, GLuint vbo, GLsizei& numVAOPoints) const
 void FPEngine::_createCurve(GLuint vao, GLuint vbo, GLsizei& numVAOPoints)
 {
     // TODO #02: generate the Bezier curve
-    GLint resolution = 30;
+    GLint resolution = 6000;
     numVAOPoints = resolution + 1;
 
     fprintf(stdout, "[INFO]: bezier curve read in with VAO/VBO %d/%d & %d points\n", vao, vbo, numVAOPoints);
@@ -347,8 +347,8 @@ void FPEngine::_createCurve(GLuint vao, GLuint vbo, GLsizei& numVAOPoints)
         for(int j = 0; j <= resolution; j++)
         {
             GLfloat x = static_cast<float>(j) / resolution;
-            glm::vec3 beizierPoint = _evalBezierCurve(P0, P1, P2, P3, x);
-            curvePoints.push_back(beizierPoint);
+            glm::vec3 bezierPoint = _evalBezierCurve(P0, P1, P2, P3, x);
+            curvePoints.push_back(bezierPoint);
         }
     }
     glBindVertexArray(vao);
@@ -403,7 +403,6 @@ void FPEngine::_loadControlPoints(const char* FILENAME, GLuint* numBezierPoints,
 glm::vec3 FPEngine::_evalBezierCurve(const glm::vec3 P0, const glm::vec3 P1, const glm::vec3 P2, const glm::vec3 P3,
                                         const GLfloat T) const
 {
-    // TODO #01: solve the curve equation
     glm::vec3 bezierPoint = (1 - T) * (1 - T) * (1 - T) * P0 + 3 * (1 - T) * (1 - T) * T * P1 + 3 * (1 - T) * T * T * P2
         + T * T * T * P3;
 
@@ -647,37 +646,37 @@ void FPEngine::mSetupScene()
             glm::value_ptr(lightDirection)
         );
 
-        //spotlight
-        glProgramUniform3fv(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->spotlightPos,
-            1,
-            glm::value_ptr(glm::vec3(0.0f, 5.0f, 0.0f))
-        );
-        glProgramUniform3fv(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->spotlightDir,
-            1,
-            glm::value_ptr(glm::vec3(0.0f, -1.0f, 0.0f))
-        );
-        glProgramUniform3fv(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->spotlightColor,
-            1,
-            glm::value_ptr(glm::vec3(1.0f, 0.0f, 1.0f))
-        );
-        float innerCutoffAngle = 10.0f; // inner cutoff in degrees
-        float outerCutoffAngle = 15.0f; // outer cutoff in degrees
-        glProgramUniform1f(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->spotlightCutOff,
-            cos(glm::radians(innerCutoffAngle))
-        );
-        glProgramUniform1f(
-            _shaderPrograms[i]->getShaderProgramHandle(),
-            _shaderUniformLocations[i]->spotlightOuterCutOff,
-            cos(glm::radians(outerCutoffAngle))
-        );
+        // //spotlight
+        // glProgramUniform3fv(
+        //     _shaderPrograms[i]->getShaderProgramHandle(),
+        //     _shaderUniformLocations[i]->spotlightPos,
+        //     1,
+        //     glm::value_ptr(glm::vec3(0.0f, 5.0f, 0.0f))
+        // );
+        // glProgramUniform3fv(
+        //     _shaderPrograms[i]->getShaderProgramHandle(),
+        //     _shaderUniformLocations[i]->spotlightDir,
+        //     1,
+        //     glm::value_ptr(glm::vec3(0.0f, -1.0f, 0.0f))
+        // );
+        // glProgramUniform3fv(
+        //     _shaderPrograms[i]->getShaderProgramHandle(),
+        //     _shaderUniformLocations[i]->spotlightColor,
+        //     1,
+        //     glm::value_ptr(glm::vec3(1.0f, 0.0f, 1.0f))
+        // );
+        // float innerCutoffAngle = 10.0f; // inner cutoff in degrees
+        // float outerCutoffAngle = 15.0f; // outer cutoff in degrees
+        // glProgramUniform1f(
+        //     _shaderPrograms[i]->getShaderProgramHandle(),
+        //     _shaderUniformLocations[i]->spotlightCutOff,
+        //     cos(glm::radians(innerCutoffAngle))
+        // );
+        // glProgramUniform1f(
+        //     _shaderPrograms[i]->getShaderProgramHandle(),
+        //     _shaderUniformLocations[i]->spotlightOuterCutOff,
+        //     cos(glm::radians(outerCutoffAngle))
+        // );
 
     }
 }
@@ -801,10 +800,11 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
        //***************************************************************************
     // draw the control poi
     // draw each of the control points represented by a sphere
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 1);  // don't texture
     for (int i = 0; i < _bezierCurve.numControlPoints; i++)
     {
         modelMatrix = glm::translate(glm::mat4(1.0f), _bezierCurve.controlPoints[i]);
-        _computeAndSendTransformationMatrices(_regularShaderProgram[shaderIndex],
+        _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
                                               modelMatrix, viewMtx, projMtx,
                                               _shaderUniformLocations[shaderIndex]->mvpMatrix,
                                               _shaderUniformLocations[shaderIndex]->normalMatrix);
@@ -830,7 +830,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     glm::vec3 pos = _evalBezierCurve(P0, P1, P2, P3, f);
 
     modelMatrix = glm::translate(glm::mat4(1.0f), pos);
-    _computeAndSendTransformationMatrices(_regularShaderProgram[shaderIndex],
+    _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
                                                   modelMatrix, viewMtx, projMtx,
                                                   _shaderUniformLocations[shaderIndex]->mvpMatrix,
                                                   _shaderUniformLocations[shaderIndex]->normalMatrix);

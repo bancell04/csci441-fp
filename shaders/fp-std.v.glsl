@@ -33,9 +33,9 @@ void main() {
     viewVector = normalize(cameraPos - vPos);
 
     vec3 worldPos = vec3(modelViewMtx * vec4(vPos, 1.0));
-
-    fspotDir = normalize(spotlightPos - vPos);
-    spotlightDist = distance(vPos, spotlightPos);
+    vec3 spotlightWorldPos = vec3(modelViewMtx * vec4(spotlightPos, 1.0));
+    fspotDir = normalize(spotlightWorldPos - worldPos);
+    spotlightDist = distance(worldPos, spotlightWorldPos);
 
     matColor = materialColor;
     // Pass texture coordinate to fragment shader
