@@ -415,7 +415,6 @@ void FPEngine::_createCurve(GLuint vao, GLuint vbo, GLsizei& numVAOPoints)
     // TODO #02: generate the Bezier curve
     GLint resolution = 100;
 
-    fprintf(stdout, "[INFO]: bezier curve read in with VAO/VBO %d/%d & %d points\n", vao, vbo, numVAOPoints);
     std::vector<glm::vec3> curvePoints;
     for (int i = 0; i < _bezierCurve.numCurves; i++) {
         int startIdx = 3 * i;
@@ -430,6 +429,7 @@ void FPEngine::_createCurve(GLuint vao, GLuint vbo, GLsizei& numVAOPoints)
         }
     }
     numVAOPoints = curvePoints.size();
+    fprintf(stdout, "[INFO]: bezier curve read in with VAO/VBO %d/%d & %d points\n", vao, vbo, numVAOPoints);
     _bezierCurve.curvePoints = curvePoints;
     glBindVertexArray(_vaos[VAO_ID::BEZIER_CURVE]);
 
@@ -536,7 +536,6 @@ void FPEngine::_createGroundBuffers()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbods[1]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glBindVertexArray(0);
 }
 
 void FPEngine::_createSkyBox()
@@ -832,6 +831,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     );
 
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 1); // Use texture for skybox
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 0); // don't use light
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::SKYBOX]);
     glm::mat4 modelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
     _computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
@@ -839,6 +839,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
     CSCI441::drawSolidCubeTextured(100);
 
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 1); // use light
 
     glBindTexture(GL_TEXTURE_2D, _texHandles[TEXTURE_ID::DIRT]); // use dirt texture
 
@@ -913,7 +914,8 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     
     //***************************************************************************
     // draw monorail
-    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(0.1));
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(0.0));
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 0);
     renderMonorail(_vaos[MONO_RAIL], _monorailIndices.size());
 
     // use the flat shader to draw lines
@@ -933,6 +935,12 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
 void FPEngine::_updateScene()
 {
+    std::cout << "currBezIndex: " << currBezierIndex << std::endl;
+    if (currBezierIndex >= 305 && currBezierIndex <= 405) {
+        shaderIndex = 1;
+    } else {
+        shaderIndex = 0;
+    }
     // switch cams
     if (_keys[GLFW_KEY_SPACE])
     {

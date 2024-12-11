@@ -74,7 +74,11 @@ void main() {
     // if textured:
     if (useTexture) {
         vec4 texel = texture(textureMap, textCoordinate);
-        fragColorOut = /*vec4(color, 1.0) **/ texel;
+        if (useLight) {
+            fragColorOut = vec4(color, 1.0) * texel;
+        } else {
+            fragColorOut = texel;
+        }
         
     } else {
         // pass the interpolated color through as output

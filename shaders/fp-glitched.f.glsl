@@ -63,28 +63,30 @@ void main() {
 
 
     if (useTexture) {
-        // Sample the texture without altering the coordinates
+        // randomize the color
         vec4 texel = texture(textureMap, textCoordinate);
 
-        // Add a random noise to the color channels
-        float glitchNoiseR = texel.x + random(vec2(textCoordinate.x, time)) * 0.1; // Random shift for red
-        float glitchNoiseG = texel.y + random(vec2(textCoordinate.y, time)) * 0.1; // Random shift for green
-        float glitchNoiseB = texel.z + random(vec2(textCoordinate.x + textCoordinate.y, time)) * 0.1; // Random shift for blue
+        float glitchNoiseR = texel.x + random(vec2(textCoordinate.x, time)) * 0.1; 
+        float glitchNoiseG = texel.y + random(vec2(textCoordinate.y, time)) * 0.1; 
+        float glitchNoiseB = texel.z + random(vec2(textCoordinate.x + textCoordinate.y, time)) * 0.1; 
 
-        // Adjust the texture color with the glitch noise
         vec3 glitchedColor = vec3(glitchNoiseR, glitchNoiseG, glitchNoiseB);
 
-        // Combine with material color and output
-        fragColorOut = vec4(glitchedColor, texel.a);
+        // combine texture color with light
+        if (useLight) {
+            fragColorOut = vec4(color * glitchedColor, texel.a);
+        } else {
+            fragColorOut = vec4(glitchedColor, texel.a);
+        }
     } else {
-        // Apply random color shift to non-textured objects
-        float glitchNoiseR = random(vec2(fragPosition.x, time)) * 0.1; // Use object position and time
+        // randomize the color using position and time
+        float glitchNoiseR = random(vec2(fragPosition.x, time)) * 0.1;
         float glitchNoiseG = random(vec2(fragPosition.y, time)) * 0.1;
         float glitchNoiseB = random(vec2(fragPosition.z, time)) * 0.1;
 
         vec3 glitchedColor = matColor.rgb + vec3(glitchNoiseR, glitchNoiseG, glitchNoiseB);
 
-        // Output altered color for non-textured objects
+        // output the color
         if (useLight) {
             fragColorOut = vec4(color * glitchedColor, 1.0);
         } else {
