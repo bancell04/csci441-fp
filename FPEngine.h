@@ -111,6 +111,9 @@ private:
     /// \param [out] numVAOPoints sets the number of vertices that make up the IBO array
     void _createCurve(GLuint vao, GLuint vbo, GLsizei &numVAOPoints);
 
+    void _createMonorail(std::vector<glm::vec3> curvePoints, GLuint &vao, GLuint &vbo, GLuint ibo, float radius, int numSegments);
+    void renderMonorail(GLuint vao, size_t numIndices) const;
+    std::vector<GLuint>  _monorailIndices;
     /// \desc This function loads the Bezier control points from a given file.  Upon
     /// completion, the parameters will store the number of points read in, the
     /// number of curves they represent, and the array of actual points.
@@ -136,6 +139,7 @@ private:
     GLuint _groundVAO;
     /// \desc the number of points that make up our ground object
     GLsizei _numGroundPoints;
+
 
     /// \desc creates the ground VAO
     void _createGroundBuffers();
@@ -258,7 +262,7 @@ private:
     };
 
 
-    static constexpr GLuint NUM_VAOS = 3;
+    static constexpr GLuint NUM_VAOS = 4;
     /// \desc used to index through our VAO/VBO/IBO array to give named access
     enum VAO_ID {
         /// \desc the platform that represents our ground for everything to appear on
@@ -266,7 +270,9 @@ private:
         /// \desc the control points that form the cage for our bezier curve
         BEZIER_CAGE = 1,
         /// \desc the actual bezier curve itself
-        BEZIER_CURVE = 2
+        BEZIER_CURVE = 2,
+
+        MONO_RAIL = 3
     };
     /// \desc VAO for our objects
     GLuint _vaos[NUM_VAOS];

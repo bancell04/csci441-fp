@@ -314,10 +314,86 @@ void FPEngine::mSetupBuffers()
 
         // generate curve
         _createCurve(_vaos[VAO_ID::BEZIER_CURVE], _vbos[VAO_ID::BEZIER_CURVE], _numVAOPoints[VAO_ID::BEZIER_CURVE]);
+
+        // generate monorail
+        _createMonorail(_bezierCurve.curvePoints, _vaos[VAO_ID::MONO_RAIL], _vbos[VAO_ID::MONO_RAIL], _ibos[VAO_ID::MONO_RAIL], 0.1f, 16);
     }
 
     cartPos = _bezierCurve.curvePoints[currBezierIndex];
 }
+
+void FPEngine::_createMonorail(std::vector<glm::vec3> curvePoints, GLuint& vao, GLuint& vbo, GLuint ibo, float radius, int numSegments) {
+    // containers for vertices and indices
+    std::vector<glm::vec3> vertices;
+    std::vector<GLuint> indices;
+
+    // generate vertices and indices for the cylinder along the curve
+    for (size_t i = 0; i < curvePoints.size(); ++i) {
+        glm::vec3 point = curvePoints[i];
+        glm::vec3 tangent;
+        
+        // Compute tangent vector
+        if (i < curvePoints.size() - 1) {
+            tangent = glm::normalize(curvePoints[i + 1] - point);
+        } else {
+            tangent = glm::normalize(point - curvePoints[i - 1]);
+        }
+
+        glm::vec3 normal = glm::normalize(glm::cross(tangent, glm::vec3(0, 1, 0)));
+        glm::vec3 binormal = glm::cross(tangent, normal);
+
+        // Generate circle vertices at this point
+        for (int j = 0; j < numSegments; ++j) {
+            float angle = j * 2.0f * M_PI / numSegments;
+            glm::vec3 offset = radius * (cos(angle) * normal + sin(angle) * binormal);
+            vertices.push_back(point + offset);
+        }
+
+        // Generate indices to connect this circle to the previous one
+        if (i > 0) {
+            int startIndex = i * numSegments;
+            int prevIndex = (i - 1) * numSegments;
+
+            for (int j = 0; j < numSegments; ++j) {
+                int nextJ = (j + 1) % numSegments;
+
+                // Two triangles per quad
+                indices.push_back(prevIndex + j);
+                indices.push_back(prevIndex + nextJ);
+                indices.push_back(startIndex + j);
+
+                indices.push_back(startIndex + j);
+                indices.push_back(prevIndex + nextJ);
+                indices.push_back(startIndex + nextJ);
+            }
+        }
+    }
+
+    // bind and upload data to gbo
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ibo);
+
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    _monorailIndices = indices;
+}
+
+void FPEngine::renderMonorail(GLuint vao, size_t numIndices) const {
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
+
 
 void FPEngine::_createCage(GLuint vao, GLuint vbo, GLsizei& numVAOPoints) const
 {
@@ -351,7 +427,6 @@ void FPEngine::_createCurve(GLuint vao, GLuint vbo, GLsizei& numVAOPoints)
         for (int j = 0; j <= resolution; j++) {
             float t = float(j)/resolution;
             curvePoints.push_back(_evalBezierCurve(p0, p1, p2, p3, t));
-            fprintf(stdout, "bezPoints: %f %f %f \n", _evalBezierCurve(p0, p1, p2, p3, t).x, _evalBezierCurve(p0, p1, p2, p3, t).y, _evalBezierCurve(p0, p1, p2, p3, t).z);
         }
     }
     numVAOPoints = curvePoints.size();
@@ -837,7 +912,9 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
     
     //***************************************************************************
-    // draw the control cage
+    // draw monorail
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(0.1));
+    renderMonorail(_vaos[MONO_RAIL], _monorailIndices.size());
 
     // use the flat shader to draw lines
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 0); // don't use lighting for lines
