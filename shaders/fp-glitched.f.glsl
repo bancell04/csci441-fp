@@ -3,7 +3,9 @@
 // Uniform inputs
 uniform sampler2D textureMap;
 uniform bool useTexture;
-uniform float time;                
+uniform float time;     
+uniform bool useLight;
+
 
 // Lighting uniforms
 uniform vec3 lightDirection;
@@ -83,7 +85,11 @@ void main() {
         vec3 glitchedColor = matColor.rgb + vec3(glitchNoiseR, glitchNoiseG, glitchNoiseB);
 
         // Output altered color for non-textured objects
-        fragColorOut = vec4(color * glitchedColor, 1.0);
+        if (useLight) {
+            fragColorOut = vec4(color * glitchedColor, 1.0);
+        } else {
+            fragColorOut = vec4(glitchedColor, 1.0);
+        }
     }
 
 }

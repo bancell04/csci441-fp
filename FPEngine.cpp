@@ -171,6 +171,7 @@ void FPEngine::mSetupShaders()
     _regularShaderUniformLocations.mvpMatrix = _regularShaderProgram->getUniformLocation("mvpMatrix");
     _regularShaderUniformLocations.modelViewMtx = _regularShaderProgram->getUniformLocation("modelViewMtx");
     _regularShaderUniformLocations.time = _regularShaderProgram->getUniformLocation("time");
+    _regularShaderUniformLocations.useLight = _regularShaderProgram->getUniformLocation("useLight");
     // TODO #12A - texture map
     _regularShaderUniformLocations.useTexture = _regularShaderProgram->getUniformLocation("useTexture");
     _regularShaderUniformLocations.materialColor = _regularShaderProgram->getUniformLocation("materialColor");
@@ -219,6 +220,8 @@ void FPEngine::mSetupShaders()
     _glitchedShaderUniformLocations.mvpMatrix = _glitchedShaderProgram->getUniformLocation("mvpMatrix");
     _glitchedShaderUniformLocations.modelViewMtx = _glitchedShaderProgram->getUniformLocation("modelViewMtx");
     _glitchedShaderUniformLocations.time = _glitchedShaderProgram->getUniformLocation("time");
+    _glitchedShaderUniformLocations.useLight = _glitchedShaderProgram->getUniformLocation("useLight");
+
     // TODO #12A - texture map
     _glitchedShaderUniformLocations.useTexture = _glitchedShaderProgram->getUniformLocation("useTexture");
     _glitchedShaderUniformLocations.materialColor = _glitchedShaderProgram->getUniformLocation("materialColor");
@@ -313,6 +316,7 @@ void FPEngine::mSetupBuffers()
         _createCurve(_vaos[VAO_ID::BEZIER_CURVE], _vbos[VAO_ID::BEZIER_CURVE], _numVAOPoints[VAO_ID::BEZIER_CURVE]);
     }
 
+    cartPos = _bezierCurve.curvePoints[currBezierIndex];
 }
 
 void FPEngine::_createCage(GLuint vao, GLuint vbo, GLsizei& numVAOPoints) const
@@ -333,27 +337,28 @@ void FPEngine::_createCage(GLuint vao, GLuint vbo, GLsizei& numVAOPoints) const
 void FPEngine::_createCurve(GLuint vao, GLuint vbo, GLsizei& numVAOPoints)
 {
     // TODO #02: generate the Bezier curve
-    GLint resolution = 6000;
-    numVAOPoints = resolution + 1;
+    GLint resolution = 100;
 
     fprintf(stdout, "[INFO]: bezier curve read in with VAO/VBO %d/%d & %d points\n", vao, vbo, numVAOPoints);
     std::vector<glm::vec3> curvePoints;
-    for (int i = 0; i < _bezierCurve.numCurves; ++i)
-    {
-        glm::vec3 P0 = _bezierCurve.controlPoints[i*3];
-        glm::vec3 P1 = _bezierCurve.controlPoints[i*3+1];
-        glm::vec3 P2 = _bezierCurve.controlPoints[i*3 + 2];
-        glm::vec3 P3 = _bezierCurve.controlPoints[i*3 + 3];
-        for(int j = 0; j <= resolution; j++)
-        {
-            GLfloat x = static_cast<float>(j) / resolution;
-            glm::vec3 bezierPoint = _evalBezierCurve(P0, P1, P2, P3, x);
-            curvePoints.push_back(bezierPoint);
+    for (int i = 0; i < _bezierCurve.numCurves; i++) {
+        int startIdx = 3 * i;
+        glm::vec3 p0 = _bezierCurve.controlPoints[startIdx];
+        glm::vec3 p1 = _bezierCurve.controlPoints[startIdx + 1];
+        glm::vec3 p2 = _bezierCurve.controlPoints[startIdx + 2];
+        glm::vec3 p3 = _bezierCurve.controlPoints[startIdx + 3];
+        
+        for (int j = 0; j <= resolution; j++) {
+            float t = float(j)/resolution;
+            curvePoints.push_back(_evalBezierCurve(p0, p1, p2, p3, t));
+            fprintf(stdout, "bezPoints: %f %f %f \n", _evalBezierCurve(p0, p1, p2, p3, t).x, _evalBezierCurve(p0, p1, p2, p3, t).y, _evalBezierCurve(p0, p1, p2, p3, t).z);
         }
     }
-    glBindVertexArray(vao);
+    numVAOPoints = curvePoints.size();
+    _bezierCurve.curvePoints = curvePoints;
+    glBindVertexArray(_vaos[VAO_ID::BEZIER_CURVE]);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, _vbos[VAO_ID::BEZIER_CURVE]);
     glBufferData(GL_ARRAY_BUFFER, curvePoints.size() * sizeof(glm::vec3), curvePoints.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(_shaderAttributeLocations[shaderIndex]->vPos);
@@ -378,6 +383,7 @@ void FPEngine::_loadControlPoints(const char* FILENAME, GLuint* numBezierPoints,
         fscanf(file, "%u\n", numBezierPoints);
 
         *numBezierCurves = (*numBezierPoints - 1) / 3;
+        std::cout << "numCurves: " << *numBezierCurves;
 
         fprintf(stdout, "[INFO]: Reading in %u control points\n", *numBezierPoints);
 
@@ -403,8 +409,7 @@ void FPEngine::_loadControlPoints(const char* FILENAME, GLuint* numBezierPoints,
 glm::vec3 FPEngine::_evalBezierCurve(const glm::vec3 P0, const glm::vec3 P1, const glm::vec3 P2, const glm::vec3 P3,
                                         const GLfloat T) const
 {
-    glm::vec3 bezierPoint = (1 - T) * (1 - T) * (1 - T) * P0 + 3 * (1 - T) * (1 - T) * T * P1 + 3 * (1 - T) * T * T * P2
-        + T * T * T * P3;
+    glm::vec3 bezierPoint = float(pow((1-T), 3))*P0 + 3*float(pow((1-T), 2))*T*P1 + 3*(1-T)*float(pow(T, 2))*P2 + float(pow(T,3))*P3; 
 
     return bezierPoint;
 }
@@ -599,6 +604,7 @@ void FPEngine::_generateEnvironment()
 
 void FPEngine::mSetupScene()
 {
+    animate = true; 
 
     _pArcballCam = new CSCI441::ArcballCam(2.0f);
     _pArcballCam->setLookAtPoint(cartPos);
@@ -714,7 +720,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 {
     // use our texture shader program
     _shaderPrograms[shaderIndex]->useProgram();
-
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 1); // Use lighting
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->time, static_cast<float>(glfwGetTime()));
 
 
@@ -786,7 +792,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     glm::mat4 modelMatrix = glm::rotate(transToSpotMtx, cartDirection, CSCI441::Y_AXIS);
     _computeAndSendMatrixUniforms( modelMatrix, viewMtx, projMtx );
 
-    _glitchedShaderProgram->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 0.45, 0.3065, 0.0585 ) );
+    _shaderPrograms[shaderIndex]->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 0.45, 0.45, 0.45 ) );
 
     if ( _pCartModel != nullptr )
     {
@@ -800,6 +806,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     //***************************************************************************
     // draw each of the control points represented by a sphere
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0);  // don't texture
+    _shaderPrograms[shaderIndex]->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 1.0f, 0.0f, 1.0f ) );
     for (int i = 0; i < _bezierCurve.numControlPoints; i++)
     {
         modelMatrix = glm::translate(glm::mat4(1.0f), _bezierCurve.controlPoints[i]);
@@ -813,7 +820,6 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     //***************************************************************************
     // draw the animated evaluation sphere
 
-    // use the bronze material
 
     // TODO #03C: evaluate the current position along the curve system and draw a sphere at the current point
     int i = static_cast<int>(_bezierCurve.objPos);
@@ -828,7 +834,6 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
     glm::vec3 pos = _evalBezierCurve(P0, P1, P2, P3, f);
 
-    modelMatrix = glm::translate(glm::mat4(1.0f), pos);
     _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
                                                   modelMatrix, viewMtx, projMtx,
                                                   _shaderUniformLocations[shaderIndex]->mvpMatrix,
@@ -840,19 +845,14 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     // draw the control cage
 
     // use the flat shader to draw lines
-    // _flatShaderProgram->useProgram();
-    // modelMatrix = glm::mat4(1.0f);
-    // _computeAndSendTransformationMatrices(_flatShaderProgram,
-    //                                       modelMatrix, viewMtx, projMtx,
-    //                                       _flatShaderProgramUniformLocations.mvpMatrix);
+    _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 0); // don't use lighting for lines
 
     // draw the curve control cage
-    // glBindVertexArray(_vaos[VAO_ID::BEZIER_CAGE]);
-    // glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CAGE]);
+    glBindVertexArray(_vaos[VAO_ID::BEZIER_CAGE]);
+    glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CAGE]);
 
     //***************************************************************************
     // draw the curve
-
     // LOOKHERE #1 draw the curve itself
     glBindVertexArray(_vaos[VAO_ID::BEZIER_CURVE]);
     glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CURVE]);
@@ -891,12 +891,22 @@ void FPEngine::_updateScene()
         _keys[GLFW_KEY_1] = false;
     }
 
+    if (_keys[GLFW_KEY_2]) {
+        animate = !animate;
+
+        _keys[GLFW_KEY_2] = false;
+    }
+
     // move cart forward
     if (_keys[GLFW_KEY_W] || _keys[GLFW_KEY_UP]) {
         if (cameraIndex == 1) {
             cameras[cameraIndex]->moveForward(0.5f);
-        } else {
-            cartPos = cartPos + glm::vec3(sin(cartDirection) / 10, 0.0f, (cos(cartDirection) / 10));
+        } else if (!animate) {
+            currBezierIndex++;
+            if (currBezierIndex >= _bezierCurve.curvePoints.size()) {
+                currBezierIndex = 0;
+            }
+            cartPos = _bezierCurve.curvePoints[currBezierIndex];
             _pArcballCam->setLookAtPoint(cartPos);
             _pArcballCam->recomputeOrientation();
         }
@@ -908,26 +918,40 @@ void FPEngine::_updateScene()
     if (_keys[GLFW_KEY_S] || _keys[GLFW_KEY_DOWN]) {
         if (cameraIndex == 1) {
             cameras[cameraIndex]->moveBackward(0.5f);
-        } else {
-            cartPos = cartPos - glm::vec3(sin(cartDirection) / 10, 0.0f, (cos(cartDirection) / 10));
+        } else if (!animate) {
+            currBezierIndex--;
+            if (currBezierIndex < 0) {
+                currBezierIndex = _bezierCurve.curvePoints.size() - 1;
+            }
+            cartPos = _bezierCurve.curvePoints[currBezierIndex];
             _pArcballCam->setLookAtPoint(cartPos);
             _pArcballCam->recomputeOrientation();
         }
     }
-
-    // turn cart left
-    if (_keys[GLFW_KEY_A]) {
-        if (cameraIndex == 0) {
-            cartDirection += 0.1;
+    if (animate) {
+        currBezierIndex++;
+        if (currBezierIndex >= _bezierCurve.curvePoints.size()) {
+            currBezierIndex = 0;
         }
+        cartPos = _bezierCurve.curvePoints[currBezierIndex];
+        _pArcballCam->setLookAtPoint(cartPos);
+        _pArcballCam->recomputeOrientation();
+
     }
 
     // turn cart left
-    if (_keys[GLFW_KEY_D]) {
-        if (cameraIndex == 0) {
-            cartDirection -= 0.1;
-        }
-    }
+    // if (_keys[GLFW_KEY_A]) {
+    //     if (cameraIndex == 0) {
+    //         cartDirection += 0.1;
+    //     }
+    // }
+
+    // // turn cart left
+    // if (_keys[GLFW_KEY_D]) {
+    //     if (cameraIndex == 0) {
+    //         cartDirection -= 0.1;
+    //     }
+    // }
     
     _pMapCam->setTheta(-cartDirection + M_PI);
     _pMapCam->setPosition(cartPos + glm::vec3(0.0f, 2.0f, 0.0f));

@@ -7,6 +7,7 @@ uniform sampler2D textureMap;
 layout(location = 1) in vec2 textCoordinate;
 layout(location = 0) in vec3 matColor;
 uniform bool useTexture;
+uniform bool useLight;
 
 
 
@@ -77,6 +78,10 @@ void main() {
         
     } else {
         // pass the interpolated color through as output
-        fragColorOut = vec4(color * matColor, 1.0);
+        if (useLight) {
+            fragColorOut = vec4(color * matColor, 1.0);
+        } else {
+            fragColorOut = vec4(matColor, 1.0);
+        }
     }
 }

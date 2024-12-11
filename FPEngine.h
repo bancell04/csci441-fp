@@ -95,6 +95,7 @@ private:
         GLuint numCurves = 0;
         // TODO #03A: make a data member to track the current evaluation parameter
         GLfloat objPos=0;
+        std::vector<glm::vec3> curvePoints;
 
     } _bezierCurve;
 
@@ -222,6 +223,7 @@ private:
         GLint spotlightCutOff;
         GLint spotlightOuterCutOff;
         GLfloat time;
+        GLfloat useLight;
     };
 
     struct shaderAttributeLocations {
@@ -274,6 +276,9 @@ private:
     GLuint _ibos[NUM_VAOS];
     /// \desc the number of points that make up our VAO
     GLsizei _numVAOPoints[NUM_VAOS];
+
+    bool animate;
+    int currBezierIndex;
 };
 
 
