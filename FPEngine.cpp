@@ -817,6 +817,12 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
         CSCI441::drawSolidSphere(0.25f, 16, 16);
     }
 
+    modelMatrix = glm::mat4(1.0f);
+    _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
+                                            modelMatrix, viewMtx, projMtx,
+                                            _shaderUniformLocations[shaderIndex]->mvpMatrix,
+                                            _shaderUniformLocations[shaderIndex]->normalMatrix);
+
     //***************************************************************************
     // draw the animated evaluation sphere
 
@@ -829,27 +835,17 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     glm::vec3 P2 = _bezierCurve.controlPoints[i*3 + 2];
     glm::vec3 P3 = _bezierCurve.controlPoints[i*3 + 3];
 
-    //remainder
-    GLfloat f = _bezierCurve.objPos - i;
-
-    glm::vec3 pos = _evalBezierCurve(P0, P1, P2, P3, f);
-
-    _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
-                                                  modelMatrix, viewMtx, projMtx,
-                                                  _shaderUniformLocations[shaderIndex]->mvpMatrix,
-                                                  _shaderUniformLocations[shaderIndex]->normalMatrix);
-
-    CSCI441::drawSolidSphere(0.25f, 16, 16);
-
+    
     //***************************************************************************
     // draw the control cage
 
     // use the flat shader to draw lines
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 0); // don't use lighting for lines
-
+    modelMatrix = glm::mat4(1.0f);
+    _computeAndSendMatrixUniforms(modelMatrix, viewMtx, projMtx);
     // draw the curve control cage
-    glBindVertexArray(_vaos[VAO_ID::BEZIER_CAGE]);
-    glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CAGE]);
+    // glBindVertexArray(_vaos[VAO_ID::BEZIER_CAGE]);
+    // glDrawArrays(GL_LINE_STRIP, 0, _numVAOPoints[VAO_ID::BEZIER_CAGE]);
 
     //***************************************************************************
     // draw the curve
@@ -912,8 +908,6 @@ void FPEngine::_updateScene()
         }
     }
 
-
-
     // move cart backward
     if (_keys[GLFW_KEY_S] || _keys[GLFW_KEY_DOWN]) {
         if (cameraIndex == 1) {
@@ -928,6 +922,7 @@ void FPEngine::_updateScene()
             _pArcballCam->recomputeOrientation();
         }
     }
+
     if (animate) {
         currBezierIndex++;
         if (currBezierIndex >= _bezierCurve.curvePoints.size()) {
@@ -936,27 +931,27 @@ void FPEngine::_updateScene()
         cartPos = _bezierCurve.curvePoints[currBezierIndex];
         _pArcballCam->setLookAtPoint(cartPos);
         _pArcballCam->recomputeOrientation();
-
     }
 
-    // turn cart left
-    // if (_keys[GLFW_KEY_A]) {
-    //     if (cameraIndex == 0) {
-    //         cartDirection += 0.1;
-    //     }
-    // }
+    if (_bezierCurve.curvePoints.size() > 1) {
+        int prevIndex = (currBezierIndex - 1 + _bezierCurve.curvePoints.size()) % _bezierCurve.curvePoints.size();
+        int nextIndex = (currBezierIndex + 1) % _bezierCurve.curvePoints.size();
+        
+        // curection of current position on the curve
+        glm::vec3 direction = glm::normalize(_bezierCurve.curvePoints[nextIndex] - _bezierCurve.curvePoints[prevIndex]);
+        
+        cartDirection = atan2(direction.z, direction.x) + M_PI/2;  // set cart orientation to tangent of the curve
 
-    // // turn cart left
-    // if (_keys[GLFW_KEY_D]) {
-    //     if (cameraIndex == 0) {
-    //         cartDirection -= 0.1;
-    //     }
-    // }
-    
+        cartPos = _bezierCurve.curvePoints[currBezierIndex];
+        _pArcballCam->setLookAtPoint(cartPos);
+        _pArcballCam->recomputeOrientation();
+    }
+
     _pMapCam->setTheta(-cartDirection + M_PI);
     _pMapCam->setPosition(cartPos + glm::vec3(0.0f, 2.0f, 0.0f));
     _pMapCam->recomputeOrientation();
 }
+
 
 void FPEngine::run()
 {
