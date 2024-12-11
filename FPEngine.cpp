@@ -281,6 +281,7 @@ void FPEngine::mSetupBuffers()
     if ( _pCartModel->loadModelFile( "models/FPCart7.obj" ) )
     {
         _pCartModel->setAttributeLocations( _glitchedShaderAttributeLocations.vPos, _glitchedShaderAttributeLocations.vNormal );
+        _pCartModel->setAttributeLocations( _regularShaderAttributeLocations.vPos, _regularShaderAttributeLocations.vNormal );
     }
     else
     {
@@ -321,6 +322,13 @@ void FPEngine::mSetupBuffers()
     }
 
     cartPos = _bezierCurve.curvePoints[currBezierIndex];
+
+    _sirByzler = new SirByzler(_glitchedShaderProgram->getShaderProgramHandle(),
+                               _glitchedShaderUniformLocations.mvpMatrix,
+                               _glitchedShaderUniformLocations.normalMatrix,
+                               _glitchedShaderUniformLocations.materialColor);
+
+    
 }
 
 void FPEngine::_createMonorail(std::vector<glm::vec3> curvePoints, GLuint& vao, GLuint& vbo, GLuint ibo, float radius, int numSegments) {
@@ -680,6 +688,7 @@ void FPEngine::_generateEnvironment()
 void FPEngine::mSetupScene()
 {
     animate = true; 
+    hero = true;
 
     _pArcballCam = new CSCI441::ArcballCam(2.0f);
     _pArcballCam->setLookAtPoint(cartPos);
@@ -864,37 +873,50 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(0.3f, 0.3f, 0.3f));
 
     //// BEGIN DRAWING THE CART ////
-    glm::mat4 transToSpotMtx = glm::translate( glm::mat4( 1.0 ), cartPos );
-    // compute full model matrix
-    glm::mat4 modelMatrix = glm::rotate(transToSpotMtx, cartDirection, CSCI441::Y_AXIS);
-    _computeAndSendMatrixUniforms( modelMatrix, viewMtx, projMtx );
+    if (!hero) {
+        glm::mat4 transToSpotMtx = glm::translate( glm::mat4( 1.0 ), cartPos );
+        // compute full model matrix
+        glm::mat4 modelMatrix = glm::rotate(transToSpotMtx, cartDirection, CSCI441::Y_AXIS);
+        _computeAndSendMatrixUniforms( modelMatrix, viewMtx, projMtx );
 
-    _shaderPrograms[shaderIndex]->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 0.45, 0.45, 0.45 ) );
+        _shaderPrograms[shaderIndex]->setProgramUniform( _shaderUniformLocations[shaderIndex]->materialColor, glm::vec3( 0.45, 0.45, 0.45 ) );
 
-    if ( _pCartModel != nullptr )
-    {
-        if ( !_pCartModel->draw( _glitchedShaderProgram->getShaderProgramHandle( ) ) )
+        if ( _pCartModel != nullptr )
         {
-            fprintf( stderr, "[ERROR]: Could not draw OBJ Model\n" );
-            glfwSetWindowShouldClose( mpWindow, GLFW_TRUE );
+            if ( !_pCartModel->draw( _glitchedShaderProgram->getShaderProgramHandle( ) ) )
+            {
+                fprintf( stderr, "[ERROR]: Could not draw OBJ Model\n" );
+                glfwSetWindowShouldClose( mpWindow, GLFW_TRUE );
+            }
         }
+    } else {
+        glm::mat4 transToSpotMtx = glm::translate( glm::mat4( 1.0 ), cartPos );
+        transToSpotMtx = glm::translate(transToSpotMtx, glm::vec3(0.0f, 0.5f, 0.0f));
+        transToSpotMtx = glm::rotate(transToSpotMtx, float(M_PI/2), CSCI441::X_AXIS);
+        transToSpotMtx = glm::scale(transToSpotMtx, glm::vec3(3.0f, 3.0f, 3.0f));
+        _computeAndSendMatrixUniforms( transToSpotMtx, viewMtx, projMtx );
+        _shaderPrograms[shaderIndex]->setProgramUniform( _shaderUniformLocations[shaderIndex]->materialColor, glm::vec3( 0.45, 0.45, 0.45 ) );
+        _sirByzler->drawPlane(transToSpotMtx, viewMtx, projMtx);
     }
     
     //***************************************************************************
     // draw each of the control points represented by a sphere
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useTexture, 0);  // don't texture
-    _shaderPrograms[shaderIndex]->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 1.0f, 0.0f, 1.0f ) );
-    for (int i = 0; i < _bezierCurve.numControlPoints; i++)
-    {
-        modelMatrix = glm::translate(glm::mat4(1.0f), _bezierCurve.controlPoints[i]);
-        _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
-                                              modelMatrix, viewMtx, projMtx,
-                                              _shaderUniformLocations[shaderIndex]->mvpMatrix,
-                                              _shaderUniformLocations[shaderIndex]->normalMatrix);
-        CSCI441::drawSolidSphere(0.25f, 16, 16);
+    if (controlPoints) {
+        _shaderPrograms[shaderIndex]->setProgramUniform( _glitchedShaderUniformLocations.materialColor, glm::vec3( 1.0f, 0.0f, 1.0f ) );
+        for (int i = 0; i < _bezierCurve.numControlPoints; i++)
+        {
+            glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), _bezierCurve.controlPoints[i]);
+            _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
+                                                modelMatrix, viewMtx, projMtx,
+                                                _shaderUniformLocations[shaderIndex]->mvpMatrix,
+                                                _shaderUniformLocations[shaderIndex]->normalMatrix);
+            CSCI441::drawSolidSphere(0.25f, 16, 16);
+        }
     }
 
-    modelMatrix = glm::mat4(1.0f);
+
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
     _computeAndSendTransformationMatrices(_shaderPrograms[shaderIndex],
                                             modelMatrix, viewMtx, projMtx,
                                             _shaderUniformLocations[shaderIndex]->mvpMatrix,
@@ -921,8 +943,13 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
     // draw support beams
     for (int i = 0; i < _bezierCurve.curvePoints.size(); i++) {
-        if (i % 100 == 0) {
-            CSCI441::drawSolidCube(1.0f);
+        if (i % 50 == 0) {
+            modelMtx = glm::mat4(1.0f);
+            modelMtx = glm::translate(modelMtx, _bezierCurve.curvePoints[i]);
+            modelMtx = glm::translate(modelMtx, glm::vec3(0.0f, -_bezierCurve.curvePoints[i].y / 2, 0.0f));
+            modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 2*_bezierCurve.curvePoints[i].y, 1.0f));
+            _computeAndSendMatrixUniforms( modelMtx, viewMtx, projMtx );
+            CSCI441::drawSolidCube(0.5f);
         }
     }
 
@@ -943,11 +970,13 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
 
 void FPEngine::_updateScene()
 {
-    std::cout << "currBezIndex: " << currBezierIndex << std::endl;
     if (currBezierIndex >= 305 && currBezierIndex <= 405) {
         shaderIndex = 1;
+        _sirByzler->flyForward();
+        hero = true;
     } else {
         shaderIndex = 0;
+        hero = false;
     }
     // switch cams
     if (_keys[GLFW_KEY_SPACE])
@@ -973,17 +1002,15 @@ void FPEngine::_updateScene()
         _keys[GLFW_KEY_F] = false;
     }
 
-    if (_keys[GLFW_KEY_1]) {
-        shaderIndex++;
-        shaderIndex = shaderIndex % 2;
-
-        _keys[GLFW_KEY_1] = false;
+    if (_keys[GLFW_KEY_C]) {
+        controlPoints = !controlPoints;
+        _keys[GLFW_KEY_C] = false;
     }
 
-    if (_keys[GLFW_KEY_2]) {
+    if (_keys[GLFW_KEY_1]) {
         animate = !animate;
 
-        _keys[GLFW_KEY_2] = false;
+        _keys[GLFW_KEY_1] = false;
     }
 
     // move cart forward

@@ -1,34 +1,24 @@
 Arda Land - Brady Ancell (Sir Byzler) | Matias Pena (Ploopy) | Garrison Cook (Marcel)
-MP - Over Hill and Under Hill
-A world with 3 heros (Sir Byzler, Ploopy, and Marcel).
+FP 
+A world with a roller coaster.
 
 USAGE: Run the executable after compiling. 
-There are 2 camera modes, ArcBallCam and FreeCam. Toggle between them using Space. Default is ArcBallCam. 
+m
 
-In ArcBallCam, use WASD to control the hero, and click and drag mouse to rotate the camera. Click and drag mouse while holding shift to zoom in and out.
+INSTRUCTIONS FOR COMPILING: Run `cmake CMakeLists.txt`. Then `make` which will create an executable named "fp". Run with `./fp`.
 
-If in FreeCam mode, use W and S to move the camera forward and backward. Click and drag the mouse to rotate the camera.
-
-You can also toggle a picture-in-picture first person mode using F.
-
-To switch between heros (for ArcBallCam and first person camera), use < and >.
-
-INSTRUCTIONS FOR COMPILING: Run `cmake CMakeLists.txt`. Then `make` which will create an executable named "mp". Run with `./mp`.
-
-BUGS: the camera will teleport do a different position when you first try to rotate it using the mouse. Positioning and attenuation of spotlight and point spotlight 
-are iffy. Players can drive off the grid without their camera following.
+BUGS: the camera will teleport do a different position when you first try to rotate it using the mouse. Spotlight is acting weird.
 
 WORK DISTRIBUTION:
-Brady - shaders/textures, implemented switching between heros, pointlight, skybox, byzler
-Matias - first person cam, picture in picture, spotlight, ploopy
-Garrison - world objects (buildings & trees), marcel
+Brady - shaders/textures, lighting, movement/control logic
+Matias - first person cam, picture in picture, curve
+Garrison - created cart object model, imported/renderd cart model
 
 QUESITONS:
 How long did this assignment take you? 
-~10-15 hours
+~10 hours
 How much did the lab help you for this assignment?
 5. 
 How fun was this assignment?
-6. Pretty fun but hard to implement complex we talked about weeks ago with few examples to go off of.
-We had no labs that used both texture and solid material color at the same time, no labs with multiple light sources
-or even different kinds.
+6. Pretty fun but hard to implement stuff we only briefly talked about like fancy things you can do with shaders and skeletal animation. Should've started
+earlier as well :/, but busy finals week. 

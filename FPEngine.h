@@ -6,6 +6,7 @@
 #include <CSCI441/OpenGLEngine.hpp>
 #include <CSCI441/ShaderProgram.hpp>
 #include <CSCI441/ModelLoader.hpp>
+#include "SirByzler.h"
 
 #include <vector>
 
@@ -285,6 +286,10 @@ private:
 
     bool animate;
     int currBezierIndex;
+    bool controlPoints;
+    bool hero;
+
+    SirByzler* _sirByzler;
 };
 
 
