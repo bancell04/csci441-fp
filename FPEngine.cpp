@@ -803,7 +803,7 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
         _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
         _shaderUniformLocations[shaderIndex]->spotlightPos,
         1,
-        glm::value_ptr(glm::vec3(0.0f, 5.0f, 0.0f))
+        glm::value_ptr(glm::vec3(0.0f, 1.0f, 0.0f))
     );
     glProgramUniform3fv(
         _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
@@ -817,8 +817,8 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
         1,
         glm::value_ptr(glm::vec3(1.0f, 0.0f, 1.0f))
     );
-    float innerCutoffAngle = 10.0f; // inner cutoff in degrees
-    float outerCutoffAngle = 15.0f; // outer cutoff in degrees
+    float innerCutoffAngle = 15.0f; // inner cutoff in degrees
+    float outerCutoffAngle = 25.0f; // outer cutoff in degrees
     glProgramUniform1f(
         _shaderPrograms[shaderIndex]->getShaderProgramHandle(),
         _shaderUniformLocations[shaderIndex]->spotlightCutOff,
