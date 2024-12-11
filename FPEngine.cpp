@@ -7,6 +7,7 @@
 #include <ctime>
 #include <iostream>
 #include <stb_image.h>
+#include <math.h>
 
 //*************************************************************************************
 //
@@ -316,7 +317,7 @@ void FPEngine::mSetupBuffers()
         _createCurve(_vaos[VAO_ID::BEZIER_CURVE], _vbos[VAO_ID::BEZIER_CURVE], _numVAOPoints[VAO_ID::BEZIER_CURVE]);
 
         // generate monorail
-        _createMonorail(_bezierCurve.curvePoints, _vaos[VAO_ID::MONO_RAIL], _vbos[VAO_ID::MONO_RAIL], _ibos[VAO_ID::MONO_RAIL], 0.1f, 16);
+        _createMonorail(_bezierCurve.curvePoints, _vaos[VAO_ID::MONO_RAIL], _vbos[VAO_ID::MONO_RAIL], _ibos[VAO_ID::MONO_RAIL], 0.2f, 16);
     }
 
     cartPos = _bezierCurve.curvePoints[currBezierIndex];
@@ -917,6 +918,13 @@ void FPEngine::_renderScene(glm::mat4 viewMtx, glm::mat4 projMtx) const
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->materialColor, glm::vec3(0.0));
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 0);
     renderMonorail(_vaos[MONO_RAIL], _monorailIndices.size());
+
+    // draw support beams
+    for (int i = 0; i < _bezierCurve.curvePoints.size(); i++) {
+        if (i % 100 == 0) {
+            CSCI441::drawSolidCube(1.0f);
+        }
+    }
 
     // use the flat shader to draw lines
     _shaderPrograms[shaderIndex]->setProgramUniform(_shaderUniformLocations[shaderIndex]->useLight, 0); // don't use lighting for lines
